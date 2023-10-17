@@ -33,9 +33,14 @@ const getDb = () => {
     return db
 }
 
+const getDbTest = () => {
+    return dbTest
+}
+
 module.exports = {
     connect,
     connectTest,
     getDb,
-    client
+    client,
+    getDbTest
 }
