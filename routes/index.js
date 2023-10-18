@@ -9,7 +9,7 @@ router.get('/', (req, res) => {
 router.post('/register', Controller.register)
 router.post('/login', Controller.login)
 
-// bakal ada authentication
+// bakal ada authentication disini
 router.post('/project', Controller.addProject)
 router.get('/project', Controller.getProject)
 router.delete('/project/:id', Controller.deleteProject)
