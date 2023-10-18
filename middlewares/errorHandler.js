@@ -14,8 +14,14 @@ const errorHandler = (err, req, res, next) => {
         message = 'Password is required'
     } else if (err.name === 'unique_email') {
         status = 400
-        message = 'This email is already registered'
-    }
+        message = 'This email is invalid'
+    } else if (err.name === 'invalid_email') {
+        status = 404
+        message = 'This email has not register'
+    } else if (err.name === 'invalid_password') {
+        status = 404
+        message = 'This password is invalid'
+    } 
 
     res.status(status).json({ message })
 }

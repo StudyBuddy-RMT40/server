@@ -21,6 +21,11 @@ class User {
         const users = await this.userCollection().find(query, projection, options).toArray()
         return users
     }
+
+    static async findBy(query, projection, options) {
+        const users = await this.userCollection().findOne(query, projection, options)
+        return users
+    }
 }
 
 module.exports = User
