@@ -1,4 +1,5 @@
 const { comparePassword } = require("../helpers/bcrypt")
+const Project = require("../models/project")
 const User = require("../models/user")
 
 class Controller {
@@ -53,6 +54,65 @@ class Controller {
             next(err)
         }
     }
+
+    static async addProject(req, res, next) {
+        try {
+            const { studentId, teacherId, startDate, endDate, isFinished, likes } = req.body
+            if (!startDate) {
+                throw { name: 'empty_startDate' }
+            }
+            if (!endDate) {
+                throw { name: 'empty_endDate' }
+            }
+            console.log(studentId, teacherId, startDate, endDate, isFinished, likes, '<<<<< project')
+            const newProject = await Project.create({studentId, teacherId, startDate, endDate, isFinished, likes})
+            console.log(newProject, '<<<<< project')
+            res.status(201).json({message: `Project has been success created`})
+        } catch (err) {
+            next(err)
+        }
+    }
+
+    static async addProject(req, res, next) {
+        try {
+            const {  name, studentId, teacherId, startDate, endDate, isFinished, description, likes, categoryId } = req.body
+            if (!name) {
+                throw { name: 'empty_name/project' }
+            }
+            if (!description) {
+                throw { name: 'empty_description/project' }
+            }
+            if (!categoryId) {
+                throw { name: 'empty_categoryId/project' }
+            }
+            await Project.create({name, studentId, teacherId, startDate, endDate, isFinished, likes, description, categoryId})
+            res.status(201).json({message: `Project has been success created`})
+        } catch (err) {
+            next(err)
+        }
+    }   
+
+    static async getProject(req, res, next) {
+        try {    
+            const getProject = await Project.findAll({})
+            res.status(200).json(getProject)
+        } catch (err) {
+            next(err)
+        }
+    }   
+
+    static async deleteProject(req, res, next) {
+        try {
+            const {id} = req.params
+            const project = await Project.delete(id)
+            if (!project) {
+                throw {name: 'not_found/project'}
+            }
+            res.status(200).json({message: `Project has been success deleted`})
+        } catch (err) {
+            next(err)
+        }
+    } 
 }
 
 module.exports = Controller
