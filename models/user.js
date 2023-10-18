@@ -26,6 +26,16 @@ class User {
         const users = await this.userCollection().findOne(query, projection, options)
         return users
     }
+
+    static async findByPk(id, projection) {
+        const user = await this.userCollection().findOne({ _id: new ObjectId(id) }, projection)
+        return user
+    }
+
+    static async findOneAndUpdate(id, projection) {
+        const updatedUser = await this.userCollection().findOneAndUpdate({ _id: new ObjectId(id) }, projection)
+        return updatedUser
+    }
 }
 
 module.exports = User
