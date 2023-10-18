@@ -19,4 +19,9 @@ router.get('/reviews', Controller.getReviews)
 router.delete('/reviews/:id', Controller.deleteReview)
 router.put('/reviews/:id', Controller.editReview)
 
+router.post('/project', Controller.addProject)
+router.get('/project', Controller.getProject)
+router.delete('/project/:id', Controller.deleteProject)
+
+
 module.exports = router

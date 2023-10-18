@@ -29,8 +29,21 @@ const errorHandler = (err, req, res, next) => {
         message = 'Minimum input comment is 1 character'
     } else if (err.name === 'review_not_found') {
         status = 404
-        message = 'Comment not found'
+        message = 'This password is invalid'
+    } else if (err.name === 'empty_name/project') {
+        status = 400
+        message = 'Name is required'
+    } else if (err.name === 'empty_description/project') {
+        status = 400
+        message = 'Description is required'
+    } else if (err.name === 'empty_categoryId/project') {
+        status = 400
+        message = 'Category is required'
+    } else if (err.name === 'not_found/project') {
+        status = 404
+        message = 'Project not found'
     }
+
 
     res.status(status).json({ message })
 }
