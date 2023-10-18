@@ -124,24 +124,6 @@ class Controller {
 
     static async addProject(req, res, next) {
         try {
-            const { studentId, teacherId, startDate, endDate, isFinished, likes } = req.body
-            if (!startDate) {
-                throw { name: 'empty_startDate' }
-            }
-            if (!endDate) {
-                throw { name: 'empty_endDate' }
-            }
-            console.log(studentId, teacherId, startDate, endDate, isFinished, likes, '<<<<< project')
-            const newProject = await Project.create({ studentId, teacherId, startDate, endDate, isFinished, likes })
-            console.log(newProject, '<<<<< project')
-            res.status(201).json({ message: `Project has been success created` })
-        } catch (err) {
-            next(err)
-        }
-    }
-
-    static async addProject(req, res, next) {
-        try {
             const { name, studentId, teacherId, startDate, endDate, isFinished, description, likes, categoryId } = req.body
             if (!name) {
                 throw { name: 'empty_name/project' }
