@@ -15,18 +15,21 @@ const errorHandler = (err, req, res, next) => {
     } else if (err.name === 'unique_email') {
         status = 400
         message = 'This email is invalid'
-    } else if (err.name === 'invalid_email') {
+    } else if (err.name === 'invalid_email/password') {
+        status = 401
+        message = 'Invalid email or password'
+    } else if (err.name === 'unauthenticated' || err.name === 'JsonWebTokenError') {
+        status = 403
+        message = 'Invalid token'
+    } else if (err.name === 'user_not_found') {
         status = 404
-        message = 'This email has not register'
-    } else if (err.name === 'invalid_password') {
+        message = 'User not found'
+    } else if (err.name === 'minimum_comment') {
+        status = 400
+        message = 'Minimum input comment is 1 character'
+    } else if (err.name === 'review_not_found') {
         status = 404
         message = 'This password is invalid'
-    } else if (err.name === 'empty_startDate') {
-        status = 404
-        message = 'Start Date must required'
-    } else if (err.name === 'empty_endDate') {
-        status = 404
-        message = 'End Date must required'
     } else if (err.name === 'empty_name/project') {
         status = 400
         message = 'Name is required'
@@ -39,8 +42,8 @@ const errorHandler = (err, req, res, next) => {
     } else if (err.name === 'not_found/project') {
         status = 404
         message = 'Project not found'
-    } 
-    
+    }
+
 
     res.status(status).json({ message })
 }

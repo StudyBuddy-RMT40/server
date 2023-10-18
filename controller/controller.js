@@ -1,4 +1,6 @@
 const { comparePassword } = require("../helpers/bcrypt")
+const { signToken } = require("../helpers/jwt")
+const Review = require("../models/review")
 const Project = require("../models/project")
 const User = require("../models/user")
 
@@ -39,17 +41,82 @@ class Controller {
                 throw { name: 'empty_password' }
             }
             const findUser = await User.findBy({ email })
-            console.log(findUser, '<<<<<')
+            // console.log(findUser, '<<<<<')
             if (!findUser) {
-                throw {name: 'invalid_email'}
+                throw { name: 'invalid_email/password' }
             }
-            console.log(password, findUser.password, '<<<<<<<<<')
-            const isPassValid = await comparePassword(password, findUser.password)
-            console.log(isPassValid, '<<<<<')
+            // console.log(password, findUser.password, '<<<<<<<<<')
+            const isPassValid = comparePassword(password, findUser.password)
+            // console.log(isPassValid, '<<<<<')
             if (!isPassValid) {
-                throw {name: 'invalid_password'}
+                throw { name: 'invalid_email/password' }
             }
-            res.status(200).json({message: `User with username ${email} has login`})
+            const access_token = signToken({ id: findUser._id })
+            res.status(200).json({ access_token })
+        } catch (err) {
+            next(err)
+        }
+    }
+
+    static async updateRoleUser(req, res, next) {
+        try {
+            const { id } = req.user
+            const { role } = req.body
+            const user = await User.findOneAndUpdate(id, { $set: { role } })
+            if (!user) {
+                throw { name: "user_not_found" }
+            }
+            res.json({ message: "Role updated successfully" })
+        } catch (err) {
+            next(err)
+        }
+    }
+
+    static async createReview(req, res, next) {
+        try {
+            const { comment } = req.body
+            const { projectId } = req.params
+            if (comment.length < 1) {
+                throw { name: 'minimum_comment' }
+            }
+            await Review.createReview({ comment, UserId: req.user.id, ProjectId: projectId })
+            res.status(201).json({ message: 'Review created successfully' })
+        } catch (err) {
+            next(err)
+        }
+    }
+
+    static async getReviews(req, res, next) {
+        try {
+            const reviews = await Review.findAll()
+            res.json(reviews)
+        } catch (err) {
+            next(err)
+        }
+    }
+
+    static async deleteReview(req, res, next) {
+        try {
+            const { id } = req.params
+            const review = await Review.findOneAndDelete(id)
+            if (!review) {
+                throw { name: 'review_not_found' }
+            }
+            res.json({ message: 'Comment deleted successfully' })
+        } catch (err) {
+            next(err)
+        }
+    }
+
+    static async editReview(req, res, next) {
+        try {
+            const { id } = req.params
+            const { comment } = req.body
+            if (comment.length < 1) {
+                throw { name: 'minimum_comment' }
+            }
+            await Review.findOneAndUpdate(id, { $set: { comment } })
+            res.json({ message: 'Comment edited' })
         } catch (err) {
             next(err)
         }
@@ -57,25 +124,7 @@ class Controller {
 
     static async addProject(req, res, next) {
         try {
-            const { studentId, teacherId, startDate, endDate, isFinished, likes } = req.body
-            if (!startDate) {
-                throw { name: 'empty_startDate' }
-            }
-            if (!endDate) {
-                throw { name: 'empty_endDate' }
-            }
-            console.log(studentId, teacherId, startDate, endDate, isFinished, likes, '<<<<< project')
-            const newProject = await Project.create({studentId, teacherId, startDate, endDate, isFinished, likes})
-            console.log(newProject, '<<<<< project')
-            res.status(201).json({message: `Project has been success created`})
-        } catch (err) {
-            next(err)
-        }
-    }
-
-    static async addProject(req, res, next) {
-        try {
-            const {  name, studentId, teacherId, startDate, endDate, isFinished, description, likes, categoryId } = req.body
+            const { name, studentId, teacherId, startDate, endDate, isFinished, description, likes, categoryId } = req.body
             if (!name) {
                 throw { name: 'empty_name/project' }
             }
@@ -85,34 +134,34 @@ class Controller {
             if (!categoryId) {
                 throw { name: 'empty_categoryId/project' }
             }
-            await Project.create({name, studentId, teacherId, startDate, endDate, isFinished, likes, description, categoryId})
-            res.status(201).json({message: `Project has been success created`})
+            await Project.create({ name, studentId, teacherId, startDate, endDate, isFinished, likes, description, categoryId })
+            res.status(201).json({ message: `Project has been success created` })
         } catch (err) {
             next(err)
         }
-    }   
+    }
 
     static async getProject(req, res, next) {
-        try {    
+        try {
             const getProject = await Project.findAll({})
             res.status(200).json(getProject)
         } catch (err) {
             next(err)
         }
-    }   
+    }
 
     static async deleteProject(req, res, next) {
         try {
-            const {id} = req.params
+            const { id } = req.params
             const project = await Project.delete(id)
             if (!project) {
-                throw {name: 'not_found/project'}
+                throw { name: 'not_found/project' }
             }
-            res.status(200).json({message: `Project has been success deleted`})
+            res.status(200).json({ message: `Project has been success deleted` })
         } catch (err) {
             next(err)
         }
-    } 
+    }
 }
 
 module.exports = Controller
