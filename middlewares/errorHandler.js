@@ -21,7 +21,26 @@ const errorHandler = (err, req, res, next) => {
     } else if (err.name === 'invalid_password') {
         status = 404
         message = 'This password is invalid'
+    } else if (err.name === 'empty_startDate') {
+        status = 404
+        message = 'Start Date must required'
+    } else if (err.name === 'empty_endDate') {
+        status = 404
+        message = 'End Date must required'
+    } else if (err.name === 'empty_name/project') {
+        status = 400
+        message = 'Name is required'
+    } else if (err.name === 'empty_description/project') {
+        status = 400
+        message = 'Description is required'
+    } else if (err.name === 'empty_categoryId/project') {
+        status = 400
+        message = 'Category is required'
+    } else if (err.name === 'not_found/project') {
+        status = 404
+        message = 'Project not found'
     } 
+    
 
     res.status(status).json({ message })
 }
