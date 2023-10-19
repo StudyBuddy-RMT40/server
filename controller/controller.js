@@ -51,13 +51,10 @@ class Controller {
         throw { name: "empty_password" };
       }
       const findUser = await User.findBy({ email });
-      // console.log(findUser, '<<<<<')
       if (!findUser) {
         throw { name: "invalid_email/password" };
       }
-      // console.log(password, findUser.password, '<<<<<<<<<')
       const isPassValid = comparePassword(password, findUser.password);
-      // console.log(isPassValid, '<<<<<')
       if (!isPassValid) {
         throw { name: "invalid_email/password" };
       }
@@ -197,6 +194,56 @@ class Controller {
     }
   }
 
+  static async updateProject(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { name, description, isFinished, categoryId } = req.body;
+      if (name) {
+        console.log(name, "<<<< Name");
+        const nameProject = await Project.findOneAndUpdate(id, {
+          $set: { name },
+        });
+        res.status(200).json({ message: "Name updated successfully" });
+      }
+      if (description) {
+        console.log(description, "<<<< Description");
+        const descriptionProject = await Project.findOneAndUpdate(id, {
+          $set: { description },
+        });
+        res.status(200).json({ message: "Description updated successfully" });
+      }
+      if (isFinished) {
+        console.log(isFinished, "<<<< finishes");
+        const isFinishedProject = await Project.findOneAndUpdate(id, {
+          $set: { isFinished },
+        });
+        res.status(200).json({ message: "isFinished updated successfully" });
+      }
+      if (categoryId) {
+        console.log(categoryId, "<<<< category");
+        const categoryIdProject = await Project.findOneAndUpdate(id, {
+          $set: { categoryId },
+        });
+        res.status(200).json({ message: "Category id updated successfully" });
+      }
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async deleteProject(req, res, next) {
+    try {
+      const { id } = req.params;
+      const project = await Project.delete(id);
+      if (!project) {
+        throw { name: "not_found/project" };
+      }
+      res.status(200).json({ message: `Project has been success deleted` });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async addCategories(req, res, next) {
     try {
       const { name } = req.body;
@@ -238,7 +285,7 @@ class Controller {
       if (!/^[0-9a-fA-F]{24}$/.test(id)) {
         return res.status(400).json({ message: "Invalid ID format" });
       }
-      
+
       let checkCategory = await Category.findById(id);
 
       if (!checkCategory) {
