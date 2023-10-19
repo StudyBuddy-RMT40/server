@@ -31,6 +31,16 @@ class Project {
             console.log(error)
         }
     }
+
+    static async findOneAndUpdate(id, projection) {
+        try {
+            const updatedProject = await this.projectCollection().findOneAndUpdate({ _id: new ObjectId(id) }, projection)
+            return updatedProject            
+        } catch (error) {
+            console.log(error)
+        }
+
+    }
 }
 
 module.exports = Project
