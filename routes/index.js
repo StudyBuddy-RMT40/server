@@ -21,8 +21,12 @@ router.put('/reviews/:id', Controller.editReview)
 
 router.post('/project', Controller.addProject)
 router.get('/project', Controller.getProject)
+router.get('/project/:id', Controller.getProjectbyId)
 router.delete('/project/:id', Controller.deleteProject)
 router.patch('/project/:id', Controller.updateProject)
 
+router.get('/ratings', Controller.getRating)
+router.post('/ratings', Controller.addRating)
+router.put('/ratings/:id', Controller.updateRating)
 
 module.exports = router

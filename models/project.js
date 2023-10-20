@@ -41,6 +41,11 @@ class Project {
         }
 
     }
+
+    static async findByPk(id, projection) {
+        const projectById = await this.projectCollection().findOne({ _id: new ObjectId(id) }, projection)
+        return projectById
+    }
 }
 
 module.exports = Project
