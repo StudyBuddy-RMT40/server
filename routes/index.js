@@ -10,6 +10,11 @@ router.get('/', (req, res) => {
 router.post('/register', Controller.register)
 router.post('/login', Controller.login)
 
+// naniti dipindah aja ya mas, problemnya di access tokenya ga masuk" di tdd 
+router.get('/categories',Controller.getCategories)
+router.post('/categories',Controller.addCategories)
+router.delete('/categories/:id',Controller.deleteCategories)
+
 router.use(authentication)
 
 router.patch('/users', Controller.updateRoleUser)
