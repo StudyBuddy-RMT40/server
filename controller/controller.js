@@ -71,6 +71,7 @@ class Controller {
       const { id } = req.user;
       const { role } = req.body;
       const user = await User.findOneAndUpdate(id, { $set: { role } });
+      // tanda tanya
       if (!user) {
         throw { name: "user_not_found" };
       }
@@ -127,7 +128,8 @@ class Controller {
       if (comment.length < 1) {
         throw { name: "minimum_comment" };
       }
-      await Review.findOneAndUpdate(id, { $set: { comment } });
+      const updateReview = await Review.findOneAndUpdate(id, { $set: { comment } });
+      console.log(updateReview, '<<<<')
       res.json({ message: "Comment edited" });
     } catch (err) {
       next(err);
@@ -198,13 +200,14 @@ class Controller {
   static async deleteProject(req, res, next) {
     try {
       const { id } = req.params;
-      const project = await Project.delete(id);
-      if (project.deletedCount === 0) {
-        throw { name: "not_found/project" };
+      // if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+      //   return res.status(400).json({ message: "Invalid ID format" });
+      // }
+      let checkProject = await Project.findByPk(id);
+      if (!checkProject) {
+        throw {name: 'not_found/project'}
       }
-      if (!project) {
-        throw { name: "not_found/project" };
-      }
+      const project = await Project.delete(id)
       res.status(200).json({ message: `Project has been success deleted` });
     } catch (err) {
       next(err);
