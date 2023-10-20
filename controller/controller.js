@@ -87,12 +87,12 @@ class Controller {
       if (comment.length < 1) {
         throw { name: "minimum_comment" };
       }
-      await Review.createReview({
+      const response = await Review.create({
         comment,
         UserId: req.user.id,
         ProjectId: projectId,
       });
-      res.status(201).json({ message: "Review created successfully" });
+      res.status(201).json({ message: "Review created successfully", id: response.insertedId });
     } catch (err) {
       next(err);
     }
@@ -145,7 +145,7 @@ class Controller {
         isFinished,
         description,
         likes,
-        categoryId,
+        CategoryId,
       } = req.body;
       if (!name) {
         throw { name: "empty_name/project" };
@@ -153,10 +153,10 @@ class Controller {
       if (!description) {
         throw { name: "empty_description/project" };
       }
-      if (!categoryId) {
+      if (!CategoryId) {
         throw { name: "empty_categoryId/project" };
       }
-      await Project.create({
+      const response = await Project.create({
         name,
         studentId,
         teacherId,
@@ -165,9 +165,9 @@ class Controller {
         isFinished,
         likes,
         description,
-        categoryId,
+        CategoryId,
       });
-      res.status(201).json({ message: `Project has been success created` });
+      res.status(201).json({ message: `Project has been success created`, id: response.insertedId } );
     } catch (err) {
       next(err);
     }
@@ -199,6 +199,9 @@ class Controller {
     try {
       const { id } = req.params;
       const project = await Project.delete(id);
+      if (project.deletedCount === 0) {
+        throw { name: "not_found/project" };
+      }
       if (!project) {
         throw { name: "not_found/project" };
       }
@@ -250,7 +253,7 @@ class Controller {
       try {
           const { rating } = req.body
           const newRating = await Rating.create({ UserId: req.user.id, rating})
-          res.status(201).json({message: 'add rating success'})
+          res.status(201).json({message: 'add rating success', id: newRating.insertedId})
       } catch (err) {
           next(err)
       }
