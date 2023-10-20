@@ -5,6 +5,7 @@ const Project = require("../models/project");
 const User = require("../models/user");
 const Category = require("../models/category");
 const Rating = require("../models/rating")
+const { OAuth2Client } = require("google-auth-library");
 
 class Controller {
   static async register(req, res, next) {
@@ -63,6 +64,33 @@ class Controller {
       res.status(200).json({ access_token });
     } catch (err) {
       next(err);
+    }
+  }
+
+  static async googleLogin(req, res, next) {
+    try {
+      let status = 200
+      let access_token
+      const { google_token } = req.headers;
+      const client = new OAuth2Client();
+      const ticket = await client.verifyIdToken({
+        idToken: google_token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+
+      const payload = ticket.getPayload();
+
+      const user = await User.findBy({ email: payload.email })
+      if (!user) {
+        status = 201
+        const newUser = await User.create({ username: payload.name, email: payload.email, password: "INI_DARI_GOOGLE" })
+        access_token = signToken({ id: newUser.insertedId })
+      } else {
+        access_token = signToken({ id: user._id })
+      }
+      res.status(status).json(access_token)
+    } catch (err) {
+      next(err)
     }
   }
 
@@ -169,33 +197,33 @@ class Controller {
         description,
         CategoryId,
       });
-      res.status(201).json({ message: `Project has been success created`, id: response.insertedId } );
+      res.status(201).json({ message: `Project has been success created`, id: response.insertedId });
     } catch (err) {
       next(err);
     }
   }
 
-    static async getProject(req, res, next) {
-        try {
-            const getProject = await Project.findAll({})
-            res.status(200).json(getProject)
-        } catch (err) {
-            next(err)
-        }
+  static async getProject(req, res, next) {
+    try {
+      const getProject = await Project.findAll({})
+      res.status(200).json(getProject)
+    } catch (err) {
+      next(err)
     }
+  }
 
-    static async getProjectbyId(req, res, next) {
-        try {
-            const { id } = req.params
-            const getProjectById = await Project.findByPk(id)
-            if (!getProjectById) {
-                throw {name: 'not_found/project'}
-            }
-            res.status(200).json(getProjectById)
-        } catch (err) {
-            next(err)
-        }
+  static async getProjectbyId(req, res, next) {
+    try {
+      const { id } = req.params
+      const getProjectById = await Project.findByPk(id)
+      if (!getProjectById) {
+        throw { name: 'not_found/project' }
+      }
+      res.status(200).json(getProjectById)
+    } catch (err) {
+      next(err)
     }
+  }
 
   static async deleteProject(req, res, next) {
     try {
@@ -205,7 +233,7 @@ class Controller {
       // }
       let checkProject = await Project.findByPk(id);
       if (!checkProject) {
-        throw {name: 'not_found/project'}
+        throw { name: 'not_found/project' }
       }
       const project = await Project.delete(id)
       res.status(200).json({ message: `Project has been success deleted` });
@@ -216,62 +244,62 @@ class Controller {
 
   static async updateProject(req, res, next) {
     try {
-        const {id} = req.params
-        const {name, description, isFinished, CategoryId} = req.body
-        if (name) {
-            console.log(name, '<<<< Name')
-            const nameProject = await Project.findOneAndUpdate(id, { $set: { name } })
-            res.status(200).json({ message: "Name updated successfully" })
-        }
-        if (description) {
-            console.log(description, '<<<< Description')
-            const descriptionProject = await Project.findOneAndUpdate(id, { $set: { description } })
-            res.status(200).json({ message: "Description updated successfully" })
-        }
-        if (isFinished) {
-            console.log(isFinished, '<<<< finishes')
-            const isFinishedProject = await Project.findOneAndUpdate(id, { $set: { isFinished } })
-            res.status(200).json({ message: "isFinished updated successfully" })
-        }
-        if (CategoryId) {
-            console.log(CategoryId, '<<<< category')
-            const categoryIdProject = await Project.findOneAndUpdate(id, { $set: { CategoryId } })
-            res.status(200).json({ message: "Category id updated successfully" })
-        }
-      } catch (err) {
-          next(err)
+      const { id } = req.params
+      const { name, description, isFinished, CategoryId } = req.body
+      if (name) {
+        console.log(name, '<<<< Name')
+        const nameProject = await Project.findOneAndUpdate(id, { $set: { name } })
+        res.status(200).json({ message: "Name updated successfully" })
       }
+      if (description) {
+        console.log(description, '<<<< Description')
+        const descriptionProject = await Project.findOneAndUpdate(id, { $set: { description } })
+        res.status(200).json({ message: "Description updated successfully" })
+      }
+      if (isFinished) {
+        console.log(isFinished, '<<<< finishes')
+        const isFinishedProject = await Project.findOneAndUpdate(id, { $set: { isFinished } })
+        res.status(200).json({ message: "isFinished updated successfully" })
+      }
+      if (CategoryId) {
+        console.log(CategoryId, '<<<< category')
+        const categoryIdProject = await Project.findOneAndUpdate(id, { $set: { CategoryId } })
+        res.status(200).json({ message: "Category id updated successfully" })
+      }
+    } catch (err) {
+      next(err)
+    }
   }
 
   static async getRating(req, res, next) {
-      try {
-          const getRating = await Rating.findAll()
-          res.status(200).json(getRating)
-      } catch (err) {
-          next(err)
-      }
+    try {
+      const getRating = await Rating.findAll()
+      res.status(200).json(getRating)
+    } catch (err) {
+      next(err)
+    }
   }
 
   static async addRating(req, res, next) {
-      try {
-          const { rating } = req.body
-          const newRating = await Rating.create({ UserId: req.user.id, rating})
-          res.status(201).json({message: 'add rating success', id: newRating.insertedId})
-      } catch (err) {
-          next(err)
-      }
+    try {
+      const { rating } = req.body
+      const newRating = await Rating.create({ UserId: req.user.id, rating })
+      res.status(201).json({ message: 'add rating success', id: newRating.insertedId })
+    } catch (err) {
+      next(err)
+    }
   }
 
   static async updateRating(req, res, next) {
-      try {
-          const { id } = req.params
-          const { rating } = req.body
-          console.log(id, rating, '>>>>> hal')
-          const newRating = await Rating.findOneAndUpdate(id, { $set: { rating } })
-          res.status(200).json({message: 'update rating success'})
-      } catch (err) {
-          next(err)
-      }
+    try {
+      const { id } = req.params
+      const { rating } = req.body
+      console.log(id, rating, '>>>>> hal')
+      const newRating = await Rating.findOneAndUpdate(id, { $set: { rating } })
+      res.status(200).json({ message: 'update rating success' })
+    } catch (err) {
+      next(err)
+    }
   }
 
   static async addCategories(req, res, next) {

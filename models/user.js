@@ -14,6 +14,7 @@ class User {
         }
 
         const newUser = await this.userCollection().insertOne(value)
+        console.log(newUser)
         return newUser
     }
 
@@ -35,6 +36,11 @@ class User {
     static async findOneAndUpdate(id, projection) {
         const updatedUser = await this.userCollection().findOneAndUpdate({ _id: new ObjectId(id) }, projection)
         return updatedUser
+    }
+
+    static async findAndModify(document) {
+        const user = await this.userCollection().findAndModify(document)
+        return user
     }
 }
 
