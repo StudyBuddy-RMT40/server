@@ -4,6 +4,7 @@ const Review = require("../models/review");
 const Project = require("../models/project");
 const User = require("../models/user");
 const Category = require("../models/category");
+const Rating = require("../models/rating")
 
 class Controller {
   static async register(req, res, next) {
@@ -172,14 +173,27 @@ class Controller {
     }
   }
 
-  static async getProject(req, res, next) {
-    try {
-      const getProject = await Project.findAll({});
-      res.status(200).json(getProject);
-    } catch (err) {
-      next(err);
+    static async getProject(req, res, next) {
+        try {
+            const getProject = await Project.findAll({})
+            res.status(200).json(getProject)
+        } catch (err) {
+            next(err)
+        }
     }
-  }
+
+    static async getProjectbyId(req, res, next) {
+        try {
+            const { id } = req.params
+            const getProjectById = await Project.findByPk(id)
+            if (!getProjectById) {
+                throw {name: 'not_found/project'}
+            }
+            res.status(200).json(getProjectById)
+        } catch (err) {
+            next(err)
+        }
+    }
 
   static async deleteProject(req, res, next) {
     try {
@@ -196,52 +210,62 @@ class Controller {
 
   static async updateProject(req, res, next) {
     try {
-      const { id } = req.params;
-      const { name, description, isFinished, categoryId } = req.body;
-      if (name) {
-        console.log(name, "<<<< Name");
-        const nameProject = await Project.findOneAndUpdate(id, {
-          $set: { name },
-        });
-        res.status(200).json({ message: "Name updated successfully" });
+        const {id} = req.params
+        const {name, description, isFinished, CategoryId} = req.body
+        if (name) {
+            console.log(name, '<<<< Name')
+            const nameProject = await Project.findOneAndUpdate(id, { $set: { name } })
+            res.status(200).json({ message: "Name updated successfully" })
+        }
+        if (description) {
+            console.log(description, '<<<< Description')
+            const descriptionProject = await Project.findOneAndUpdate(id, { $set: { description } })
+            res.status(200).json({ message: "Description updated successfully" })
+        }
+        if (isFinished) {
+            console.log(isFinished, '<<<< finishes')
+            const isFinishedProject = await Project.findOneAndUpdate(id, { $set: { isFinished } })
+            res.status(200).json({ message: "isFinished updated successfully" })
+        }
+        if (CategoryId) {
+            console.log(CategoryId, '<<<< category')
+            const categoryIdProject = await Project.findOneAndUpdate(id, { $set: { CategoryId } })
+            res.status(200).json({ message: "Category id updated successfully" })
+        }
+      } catch (err) {
+          next(err)
       }
-      if (description) {
-        console.log(description, "<<<< Description");
-        const descriptionProject = await Project.findOneAndUpdate(id, {
-          $set: { description },
-        });
-        res.status(200).json({ message: "Description updated successfully" });
-      }
-      if (isFinished) {
-        console.log(isFinished, "<<<< finishes");
-        const isFinishedProject = await Project.findOneAndUpdate(id, {
-          $set: { isFinished },
-        });
-        res.status(200).json({ message: "isFinished updated successfully" });
-      }
-      if (categoryId) {
-        console.log(categoryId, "<<<< category");
-        const categoryIdProject = await Project.findOneAndUpdate(id, {
-          $set: { categoryId },
-        });
-        res.status(200).json({ message: "Category id updated successfully" });
-      }
-    } catch (err) {
-      next(err);
-    }
   }
 
-  static async deleteProject(req, res, next) {
-    try {
-      const { id } = req.params;
-      const project = await Project.delete(id);
-      if (!project) {
-        throw { name: "not_found/project" };
+  static async getRating(req, res, next) {
+      try {
+          const getRating = await Rating.findAll()
+          res.status(200).json(getRating)
+      } catch (err) {
+          next(err)
       }
-      res.status(200).json({ message: `Project has been success deleted` });
-    } catch (err) {
-      next(err);
-    }
+  }
+
+  static async addRating(req, res, next) {
+      try {
+          const { rating } = req.body
+          const newRating = await Rating.create({ UserId: req.user.id, rating})
+          res.status(201).json({message: 'add rating success'})
+      } catch (err) {
+          next(err)
+      }
+  }
+
+  static async updateRating(req, res, next) {
+      try {
+          const { id } = req.params
+          const { rating } = req.body
+          console.log(id, rating, '>>>>> hal')
+          const newRating = await Rating.findOneAndUpdate(id, { $set: { rating } })
+          res.status(200).json({message: 'update rating success'})
+      } catch (err) {
+          next(err)
+      }
   }
 
   static async addCategories(req, res, next) {

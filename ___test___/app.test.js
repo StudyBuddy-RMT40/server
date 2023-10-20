@@ -141,7 +141,7 @@ describe("Project with endpoint /project", () => {
         isFinished: true,
         description: "Halo ini untuk test description",
         likes: 10,
-        categoryId: 1,
+        CategoryId: 1,
       })
       .set("access_token", access_token);
 
@@ -166,7 +166,27 @@ describe("Project with endpoint /project", () => {
     expect(response.body[0]).toHaveProperty("isFinished", expect.any(Boolean));
     expect(response.body[0]).toHaveProperty("description", expect.any(String));
     expect(response.body[0]).toHaveProperty("likes", expect.any(Number));
-    expect(response.body[0]).toHaveProperty("categoryId", expect.any(Number));
+    expect(response.body[0]).toHaveProperty("CategoryId", expect.any(Number));
+  });
+
+  it("should respon 200 project get by id and body message", async () => {
+    const response = await request(app)
+      .get("/project/653008bef350218dd7e729f0")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Object);
+
+    expect(response.body).toHaveProperty("_id", expect.any(String));
+    expect(response.body).toHaveProperty("name", expect.any(String));
+    expect(response.body).toHaveProperty("studentId", expect.any(Number));
+    expect(response.body).toHaveProperty("teacherId", expect.any(Number));
+    expect(response.body).toHaveProperty("startDate", expect.any(String));
+    expect(response.body).toHaveProperty("endDate", expect.any(String));
+    expect(response.body).toHaveProperty("isFinished", expect.any(Boolean));
+    expect(response.body).toHaveProperty("description", expect.any(String));
+    expect(response.body).toHaveProperty("likes", expect.any(Number));
+    expect(response.body).toHaveProperty("CategoryId", expect.any(Number));
   });
 
   it("should respon 400 name invalid and body message", async () => {
@@ -180,7 +200,7 @@ describe("Project with endpoint /project", () => {
         isFinished: true,
         description: "Halo ini untuk test description",
         likes: 10,
-        categoryId: 1,
+        CategoryId: 1,
       })
       .set("access_token", access_token);
 
@@ -199,7 +219,7 @@ describe("Project with endpoint /project", () => {
         endDate: "2023-10-10",
         isFinished: true,
         likes: 10,
-        categoryId: 1,
+        CategoryId: 1,
       })
       .set("access_token", access_token);
 
@@ -284,7 +304,7 @@ describe("Project with endpoint /project", () => {
     const response = await request(app)
       .patch("/project/652ff4ea907670325fb67333")
       .send({
-        categoryId: 1,
+        CategoryId: 1,
       })
       .set("access_token", access_token);
 
@@ -294,18 +314,13 @@ describe("Project with endpoint /project", () => {
 });
 
 describe("Reviews with endpoint /reviews", () => {
-  // belum selesai
-  it.only("should respon 201 and body message", async () => {
+  it("should respon 201 and body message", async () => {
     const response = await request(app)
       .post("/reviews/652ff4ea907670325fb67333")
       .send({
         comment: "Comment user student/buddy",
       })
       .set("access_token", access_token);
-    // .end((err, res) => {
-    //     if (err) return done(err);
-    //     expect(res.body.UserId).to.equal('653136fdd5120674a4c6917e')
-    // });
 
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty("message", expect.any(String));
@@ -313,27 +328,132 @@ describe("Reviews with endpoint /reviews", () => {
 
   it("should respon 200 and body message", async () => {
     const response = await request(app)
-      .post("/reviews")
+      .get("/reviews")
       .set("access_token", access_token);
 
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
 
-    expect(response.body[0]).toHaveProperty("id", expect.any(String));
-    expect(response.body[0]).toHaveProperty("ProjectId", expect.any(String));
+    expect(response.body[0]).toHaveProperty("_id", expect.any(String));
+    expect(response.body[0]).toHaveProperty("comment", expect.any(String));
     expect(response.body[0]).toHaveProperty("UserId", expect.any(String));
-    expect(response.body[0]).toHaveProperty("title", expect.any(String));
-    expect(response.body[0]).toHaveProperty("detail", expect.any(String));
+    expect(response.body[0]).toHaveProperty("ProjectId", expect.any(String));
+  });
+
+  it("should respon 200 delete review and body message", async () => {
+    const response = await request(app)
+      .delete("/reviews/653227fbc9b4a91f610a8982")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 400 delete review id not found and body message", async () => {
+    const response = await request(app)
+      .delete("/reviews/6532351e63ad3d0a9b028efa1")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 200 update review and body message", async () => {
+    const response = await request(app)
+      .put("/reviews/653227fbc9b4a91f610a8982")
+      .send({
+        comment: "update comment testing",
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 400 update review id not found and body message", async () => {
+    const response = await request(app)
+      .put("/reviews/6531c05a68ce77305d186be")
+      .send({
+        comment: "update comment testing id not found",
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 400 update review comment < 1 and body message", async () => {
+    const response = await request(app)
+      .put("/reviews/652ff4ea907670325fb67333")
+      .send({
+        comment: "",
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message", expect.any(String));
   });
 });
 
-describe.only("Project with endpoint /categories", () => {
+describe("Rating with endpoint /rating", () => {
+  it("should respon 201 and body message", async () => {
+    const response = await request(app)
+      .post("/ratings")
+      .send({
+        rating: 4,
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(201);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 200 and body message", async () => {
+    const response = await request(app)
+      .get("/ratings")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Array);
+
+    expect(response.body[0]).toHaveProperty("_id", expect.any(String));
+    expect(response.body[0]).toHaveProperty("UserId", expect.any(String));
+    expect(response.body[0]).toHaveProperty("rating", expect.any(Number));
+  });
+
+  it("should respon 200 update rating and body message", async () => {
+    const response = await request(app)
+      .put("/ratings/653239439dc0cf816584e27c")
+      .send({
+        rating: 2,
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 400 update rating and body message", async () => {
+    const response = await request(app)
+      .put("/ratings/653239439dc0cf816584e27")
+      .send({
+        rating: 2,
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+});
+
+describe("Project with endpoint /categories", () => {
   let tempId = "";
   it("should respon 201 and body message", async () => {
     const response = await request(app)
       .post("/categories")
-      .send({ name: "testing category" });
-    // .set("access_token", access_token);
+      .send({ name: "testing category" })
+      .set("access_token", access_token);
+
     tempId = response.body.id;
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty("message", expect.any(String));
@@ -341,8 +461,10 @@ describe.only("Project with endpoint /categories", () => {
   });
 
   it("should respon 400 name invalid and body message", async () => {
-    const response = await request(app).post("/categories").send({ name: "" });
-    // .set("access_token", access_token);
+    const response = await request(app)
+      .post("/categories")
+      .send({ name: "" })
+      .set("access_token", access_token);
 
     expect(response.status).toBe(400);
     expect(response.body).toHaveProperty("message", expect.any(String));
@@ -351,16 +473,17 @@ describe.only("Project with endpoint /categories", () => {
   it("should respon 400 name unique and body message", async () => {
     const response = await request(app)
       .post("/categories")
-      .send({ name: "testing category" });
-    // .set("access_token", access_token);
+      .send({ name: "testing category" })
+      .set("access_token", access_token);
 
     expect(response.status).toBe(400);
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
   it("should respon 200 and body message", async () => {
-    const response = await request(app).get("/categories");
-    // .set("access_token", access_token);
+    const response = await request(app)
+      .get("/categories")
+      .set("access_token", access_token);
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
 
@@ -370,8 +493,9 @@ describe.only("Project with endpoint /categories", () => {
   });
 
   it("should respon 200 delete category and body message", async () => {
-    const response = await request(app).delete(`/categories/${tempId}`);
-    // .set("access_token", access_token);
+    const response = await request(app)
+      .delete(`/categories/${tempId}`)
+      .set("access_token", access_token);
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("message", expect.any(String));
@@ -379,15 +503,18 @@ describe.only("Project with endpoint /categories", () => {
 
   it("should respon 404 delete category not found and body message", async () => {
     const invalidId = "invalidObjectId12345";
-    const response = await request(app).delete(`/categories/${invalidId}`);
+    const response = await request(app)
+      .delete(`/categories/${invalidId}`)
+      .set("access_token", access_token);
 
     expect(response.status).toBe(400);
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
   it("should respon 404 delete category not found and body message", async () => {
-    const response = await request(app).delete(`/categories/${tempId}`);
-    // .set("access_token", access_token);
+    const response = await request(app)
+      .delete(`/categories/${tempId}`)
+      .set("access_token", access_token);
 
     expect(response.status).toBe(404);
     expect(response.body).toHaveProperty("message", expect.any(String));
