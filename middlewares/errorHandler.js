@@ -42,10 +42,19 @@ const errorHandler = (err, req, res, next) => {
     } else if (err.name === 'not_found/project') {
         status = 404
         message = 'Project not found'
+    } else if (err.name === 'name/categories') {
+        status = 400
+        message = 'Name category is required'
+    } else if (err.name === 'unique/categories') {
+        status = 400
+        message = 'Category must be unique'
+    } else if (err.name === 'not_found/category') {
+        status = 404
+        message = 'Category must be unique'
     }
     else if (err.name === 'BSONError') {
         status = 400
-        message = 'input must be a 24 character hex string, 12 byte Uint8Array, or an integer'
+        message = err.message
     }
 
 

@@ -7,9 +7,7 @@ const authentication = async (req, res, next) => {
         if (!access_token) {
             throw { name: 'unauthenticated' }
         }
-
         const payload = verifyToken(access_token)
-
         const user = await User.findByPk(payload.id)
         if (!user) {
             throw { name: 'unauthenticated' }
