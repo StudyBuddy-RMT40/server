@@ -10,6 +10,8 @@ router.get('/', (req, res) => {
 router.post('/register', Controller.register)
 router.post('/login', Controller.login)
 
+
+
 router.use(authentication)
 
 router.patch('/users', Controller.updateRoleUser)
@@ -28,5 +30,10 @@ router.patch('/project/:id', Controller.updateProject)
 router.get('/ratings', Controller.getRating)
 router.post('/ratings', Controller.addRating)
 router.put('/ratings/:id', Controller.updateRating)
+
+// naniti dipindah aja ya mas, problemnya di access tokenya ga masuk" di tdd 
+router.get('/categories',Controller.getCategories)
+router.post('/categories',Controller.addCategories)
+router.delete('/categories/:id',Controller.deleteCategories)
 
 module.exports = router
