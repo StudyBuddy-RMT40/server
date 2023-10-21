@@ -14,7 +14,6 @@ class User {
         }
 
         const newUser = await this.userCollection().insertOne(value)
-        console.log(newUser)
         return newUser
     }
 

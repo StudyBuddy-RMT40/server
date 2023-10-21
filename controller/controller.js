@@ -340,9 +340,9 @@ class Controller {
     try {
       let { id } = req.params;
 
-      if (!/^[0-9a-fA-F]{24}$/.test(id)) {
-        return res.status(400).json({ message: "Invalid ID format" });
-      }
+      // if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+      //   return res.status(400).json({ message: "Invalid ID format" });
+      // }
 
       let checkCategory = await Category.findById(id);
 
