@@ -12,6 +12,9 @@ router.post('/login', Controller.login)
 
 router.use(authentication)
 
+router.get('/users', Controller.getUser)
+router.get('/users/:id', Controller.getUserById)
+router.put('/users', Controller.updateUser)
 router.patch('/users', Controller.updateRoleUser)
 
 router.post('/reviews/:projectId', Controller.createReview)
