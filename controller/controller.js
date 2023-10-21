@@ -188,7 +188,7 @@ class Controller {
         teacherId,
         startDate,
         endDate,
-        isFinished,
+        status,
         description,
         likes,
         CategoryId,
@@ -214,7 +214,7 @@ class Controller {
         teacherId,
         startDate,
         endDate,
-        isFinished,
+        status,
         likes,
         description,
         CategoryId,
@@ -272,7 +272,7 @@ class Controller {
   static async updateProject(req, res, next) {
     try {
       const { id } = req.params;
-      const { name, description, isFinished, CategoryId } = req.body;
+      const { name, description, status, CategoryId } = req.body;
       if (name) {
         console.log(name, "<<<< Name");
         const nameProject = await Project.findOneAndUpdate(id, {
@@ -287,12 +287,12 @@ class Controller {
         });
         res.status(200).json({ message: "Description updated successfully" });
       }
-      if (isFinished) {
-        console.log(isFinished, "<<<< finishes");
-        const isFinishedProject = await Project.findOneAndUpdate(id, {
-          $set: { isFinished },
+      if (status) {
+        console.log(status, "<<<< finishes");
+        const statusProject = await Project.findOneAndUpdate(id, {
+          $set: { status },
         });
-        res.status(200).json({ message: "isFinished updated successfully" });
+        res.status(200).json({ message: "status updated successfully" });
       }
       if (CategoryId) {
         console.log(CategoryId, "<<<< category");
