@@ -6,7 +6,7 @@ const User = require("../models/user");
 const Category = require("../models/category");
 const Rating = require("../models/rating")
 const { OAuth2Client } = require("google-auth-library");
-const { getDb } = require("../config/mongo");
+const { ObjectId } = require('mongodb')
 
 
 class Controller {
@@ -93,12 +93,12 @@ class Controller {
       const user = await User.findBy({ email: payload.email })
       if (!user) {
         status = 201
-        const newUser = await User.create({ username: payload.name, email: payload.email, password: "INI_DARI_GOOGLE" })
+        const newUser = await User.create({ username: payload.name, email: payload.email })
         access_token = signToken({ id: newUser.insertedId })
       } else {
         access_token = signToken({ id: user._id })
       }
-      res.status(status).json(access_token)
+      res.status(status).json({ access_token })
     } catch (err) {
       next(err)
     }
@@ -214,17 +214,10 @@ class Controller {
     try {
       const {
         name,
-        studentId,
         teacherId,
-        startDate,
-        endDate,
-        status,
         description,
-        likes,
         CategoryId,
-        published,
         goals,
-        feedback
       } = req.body;
       if (!name) {
         throw { name: "empty_name/project" };
@@ -240,17 +233,17 @@ class Controller {
       }
       const response = await Project.create({
         name,
-        studentId,
+        studentId: req.user.id,
         teacherId,
-        startDate,
-        endDate,
-        status,
-        likes,
+        startDate: new Date(),
+        endDate: null,
+        status: "submitted", //Submitted, Accepted, Paid, On Progress, Finished
+        likes: 0,
         description,
-        CategoryId,
-        published,
+        CategoryId: new ObjectId(CategoryId),
+        published: false,
         goals,
-        feedback
+        feedback: null
       });
       res
         .status(201)

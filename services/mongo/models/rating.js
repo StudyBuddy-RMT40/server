@@ -3,7 +3,7 @@ const { getDb } = require('../config/mongo')
 
 class Rating {
     static ratingCollection() {
-        return getDb().collection('rating')
+        return getDb().collection('ratings')
     }
 
     static async create(data) {
