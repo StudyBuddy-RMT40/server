@@ -163,7 +163,7 @@ describe("Project with endpoint /project", () => {
         teacherId: 1,
         startDate: "2023-10-1",
         endDate: "2023-10-10",
-        isFinished: true,
+        status: "Submitted",
         description: "Halo ini untuk test description",
         likes: 10,
         CategoryId: 1,
@@ -192,7 +192,7 @@ describe("Project with endpoint /project", () => {
     expect(response.body[0]).toHaveProperty("teacherId", expect.any(Number));
     expect(response.body[0]).toHaveProperty("startDate", expect.any(String));
     expect(response.body[0]).toHaveProperty("endDate", expect.any(String));
-    expect(response.body[0]).toHaveProperty("isFinished", expect.any(Boolean));
+    expect(response.body[0]).toHaveProperty("status", expect.any(String));
     expect(response.body[0]).toHaveProperty("description", expect.any(String));
     expect(response.body[0]).toHaveProperty("likes", expect.any(Number));
     expect(response.body[0]).toHaveProperty("CategoryId", expect.any(Number));
@@ -215,7 +215,7 @@ describe("Project with endpoint /project", () => {
     expect(response.body).toHaveProperty("teacherId", expect.any(Number));
     expect(response.body).toHaveProperty("startDate", expect.any(String));
     expect(response.body).toHaveProperty("endDate", expect.any(String));
-    expect(response.body).toHaveProperty("isFinished", expect.any(Boolean));
+    expect(response.body).toHaveProperty("status", expect.any(String));
     expect(response.body).toHaveProperty("description", expect.any(String));
     expect(response.body).toHaveProperty("likes", expect.any(Number));
     expect(response.body).toHaveProperty("CategoryId", expect.any(Number));
@@ -241,7 +241,7 @@ describe("Project with endpoint /project", () => {
         teacherId: 1,
         startDate: "2023-10-1",
         endDate: "2023-10-10",
-        isFinished: true,
+        status: "Submitted",
         description: "Halo ini untuk test description",
         likes: 10,
         CategoryId: 1,
@@ -264,7 +264,7 @@ describe("Project with endpoint /project", () => {
         teacherId: 1,
         startDate: "2023-10-1",
         endDate: "2023-10-10",
-        isFinished: true,
+        status: "Submitted",
         likes: 10,
         CategoryId: 1,
         published: false,
@@ -286,7 +286,7 @@ describe("Project with endpoint /project", () => {
         teacherId: 1,
         startDate: "2023-10-1",
         endDate: "2023-10-10",
-        isFinished: true,
+        status: "Submitted",
         description: "Halo ini untuk test description",
         likes: 10,
         published: false,
@@ -308,7 +308,7 @@ describe("Project with endpoint /project", () => {
         teacherId: 1,
         startDate: "2023-10-1",
         endDate: "2023-10-10",
-        isFinished: true,
+        status: "Submitted",
         description: "Halo ini untuk test description",
         likes: 10,
         CategoryId: 1,
@@ -345,11 +345,11 @@ describe("Project with endpoint /project", () => {
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
-  it("should respon 200 update project with isFinished and body message", async () => {
+  it("should respon 200 update project with status and body message", async () => {
     const response = await request(app)
       .patch(`/projects/${tempId}`)
       .send({
-        isFinished: true,
+        status: "Submitted",
       })
       .set("access_token", access_token);
 

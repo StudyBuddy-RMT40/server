@@ -21,10 +21,7 @@ const errorHandler = (err, req, res, next) => {
     } else if (err.name === 'unauthenticated' || err.name === 'JsonWebTokenError') {
         status = 403
         message = 'Invalid token'
-    } else if (err.name === 'user_not_found') {
-        status = 404
-        message = 'User not found'
-    } else if (err.name === 'minimum_comment') {
+    }  else if (err.name === 'minimum_comment') {
         status = 400
         message = 'Minimum input comment is 1 character'
     } else if (err.name === 'review_not_found') {
