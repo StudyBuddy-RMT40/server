@@ -238,14 +238,14 @@ class Controller {
             studentId: req.user.id,
             teacherId: new ObjectId(teacherId),
             startDate: new Date(),
-            endDate: null,
+            endDate: "",
             status: "submitted",
             likes: 0,
             description,
             categoryId: new ObjectId(categoryId),
             published: false,
             goals,
-            feedback: null,
+            feedback: "",
           });
 
           let todos = [

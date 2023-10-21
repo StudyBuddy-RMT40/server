@@ -48,15 +48,23 @@ const typeDefs = `#graphql
         published: Boolean
         goals: String
         feedback: String
-        categoryId: ID
-        Student: Student
-        Teacher: Teacher
         Category: Category
+        Teacher: Teacher
+        Student: Student
+        Todo: [Todo]
     }
 
     type Category {
         _id: ID
         name: String
+    }
+
+    type Todo {
+        _id: ID
+        name: String
+        learningUrl: String
+        projectId: ID
+        isFinished: Boolean
     }
 
     type AccessToken {
@@ -65,6 +73,14 @@ const typeDefs = `#graphql
 
     type Message {
         message: String
+    }
+
+    input ProjectInput {
+        name: String
+        teacherId: ID
+        description: String
+        categoryId: ID
+        goals: String
     }
 
     input UserInput {
@@ -78,7 +94,9 @@ const typeDefs = `#graphql
 
     type Query {
         getUsers: [User]
-        getUser(id: ID): User 
+        getUser(id: ID): User
+        getProjects: [Project]
+        getProject(id: ID): Project
     }
 
     type Mutation {
@@ -86,6 +104,10 @@ const typeDefs = `#graphql
         login(user: UserInput): AccessToken
         putUser(user: UserInput): Message
         patchUser(role: UserInput): Message
+        addProject(project: ProjectInput): Message
+        deleteProject(id: ID): Message
+        putProject(id: ID, project: ProjectInput): Message
+        patchProject(id: ID, project: ProjectInput): Message
     }
 
 `
@@ -129,6 +151,46 @@ const resolvers = {
                 return user
             } catch (err) {
                 throw err.response.data
+            }
+        },
+        getProjects: async () => {
+            try {
+                let projects = await redis.get('projects')
+                if (!projects) {
+                    const { data } = await axios(`${BASE_URL}/projects`, {
+                        headers: {
+                            access_token
+                        }
+                    })
+                    projects = data
+                    await redis.set('projects', JSON.stringify(data))
+                } else {
+                    projects = JSON.parse(projects)
+                }
+                return projects
+            } catch (err) {
+                throw err.response.data
+            }
+        },
+        getProject: async (_, args) => {
+            try {
+                const { id } = args
+                let project = await redis.get(`project:${id}`)
+                if (!project) {
+                    const { data } = await axios(`${BASE_URL}/projects/${id}`, {
+                        headers: {
+                            access_token
+                        }
+                    })
+                    console.log(data)
+                    project = data
+                    await redis.set(`project:${id}`, JSON.stringify(data))
+                } else {
+                    project = JSON.parse(project)
+                }
+                return project
+            } catch (err) {
+                throw err
             }
         }
     },
@@ -178,7 +240,67 @@ const resolvers = {
                 await redis.del(`user:${data.id}`)
                 return data
             } catch (err) {
-                throwerr.response.data
+                throw err.response.data
+            }
+        },
+        addProject: async (_, args) => {
+            try {
+                const { project } = args
+                const { data } = await axios.post(`${BASE_URL}/projects`, project, {
+                    headers: {
+                        access_token
+                    }
+                })
+                await redis.del('projects')
+                return data
+            } catch (err) {
+                throw err.response.data
+            }
+        },
+        deleteProject: async (_, args) => {
+            try {
+                const { id } = args
+                const { data } = await axios.delete(`${BASE_URL}/projects/${id}`, {
+                    headers: {
+                        access_token
+                    }
+                })
+                console.log(data)
+                await redis.del('projects')
+                await redis.del(`project:${id}`)
+                return data
+            } catch (err) {
+                throw err.response.data
+            }
+        },
+        putProject: async (_, args) => {
+            try {
+                const { id, project } = args
+                const { data } = await axios.put(`${BASE_URL}/projects/${id}`, project, {
+                    headers: {
+                        access_token
+                    }
+                })
+                await redis.del('projects')
+                await redis.del(`project:${id}`)
+                return data
+            } catch (err) {
+                throw err.response.data
+            }
+        },
+        patchProject: async (_, args) => {
+            try {
+                const { id, project } = args
+                const { data } = await axios.put(`${BASE_URL}/projects/${id}`, project, {
+                    headers: {
+                        access_token
+                    }
+                })
+                await redis.del('projects')
+                await redis.del(`project:${id}`)
+                return data
+            } catch (err) {
+                throw err.response.data
             }
         }
     }
