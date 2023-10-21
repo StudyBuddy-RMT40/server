@@ -7,57 +7,32 @@ class Category {
   }
 
   static async create(data) {
-    try {
-      const newCategory = await this.projectCollection().insertOne(data);
-      return newCategory;
-    } catch (error) {
-      console.error("Error creating category:", error);
-      throw error;
-    }
+    const newCategory = await this.projectCollection().insertOne(data);
+    return newCategory;
   }
 
   static async findAll() {
-    try {
-      const categories = await this.projectCollection().find().toArray();
-      return categories;
-    } catch (error) {
-      console.error("Error finding categories:", error);
-      throw error;
-    }
+    const categories = await this.projectCollection().find().toArray();
+    return categories;
   }
 
   static async findById(id) {
-    try {
-      const category = await this.projectCollection().findOne({
-        _id: new ObjectId(id),
-      });
-      return category;
-    } catch (error) {
-      console.error("Error finding category by ID:", error);
-      throw error;
-    }
+    const category = await this.projectCollection().findOne({
+      _id: new ObjectId(id),
+    });
+    return category;
   }
 
   static async findByName(name) {
-    try {
-      const category = await this.projectCollection().findOne({ name: name });
-      return category;
-    } catch (error) {
-      console.error("Error finding category by name:", error);
-      throw error;
-    }
+    const category = await this.projectCollection().findOne({ name: name });
+    return category;
   }
 
   static async delete(id) {
-    try {
-      const deleteCategory = await this.projectCollection().deleteOne({
-        _id: new ObjectId(id),
-      });
-      return deleteCategory;
-    } catch (error) {
-      console.error("Error deleting category:", error);
-      throw error;
-    }
+    const deleteCategory = await this.projectCollection().deleteOne({
+      _id: new ObjectId(id),
+    });
+    return deleteCategory;
   }
 }
 
