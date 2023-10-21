@@ -132,7 +132,7 @@ class Controller {
       const updateReview = await User.findOneAndUpdate(id, {
         $set: { username, phoneNumber, address },
       });
-      res.status(200).json({ message: "Update user has success" });
+      res.status(200).json({ message: "Update user has success", id: updateReview._id });
     } catch (err) {
       next(err)
     }
@@ -142,8 +142,8 @@ class Controller {
     try {
       const { id } = req.user;
       const { role } = req.body;
-      await User.findOneAndUpdate(id, { $set: { role } });
-      res.json({ message: "Role updated successfully" });
+      const patchedReview = await User.findOneAndUpdate(id, { $set: { role } });
+      res.json({ message: "Role updated successfully", id: patchedReview._id });
     } catch (err) {
       next(err);
     }
@@ -234,7 +234,7 @@ class Controller {
       const response = await Project.create({
         name,
         studentId: req.user.id,
-        teacherId,
+        teacherId: new ObjectId(teacherId),
         startDate: new Date(),
         endDate: null,
         status: "submitted", //Submitted, Accepted, Paid, On Progress, Finished
