@@ -1,9 +1,9 @@
 const { getDb } = require('../config/mongo')
-const {ObjectId} = require('mongodb')
+const { ObjectId } = require('mongodb')
 
 class Project {
     static projectCollection() {
-        return getDb().collection('project')
+        return getDb().collection('projects')
     }
 
     static async create(data) {
@@ -11,17 +11,25 @@ class Project {
             ...data
         }
         const newProject = await this.projectCollection().insertOne(value)
-        return newProject       
+        return newProject
     }
 
     static async findAll() {
-        const getProject = await this.projectCollection().find().toArray()
-            return getProject
+        // const getProject = await this.projectCollection().find().toArray()
+        const getProject = await this.projectCollection().aggregate([{
+            $lookup: {
+                from: 'categories',
+                localField: 'CategoryId',
+                foreignField: '_id',
+                as: 'category'
+            }
+        }]).toArray()
+        return getProject
     }
 
     static async delete(id) {
-        const deleteProject = await this.projectCollection().deleteOne({_id: new ObjectId(id)})
-            return deleteProject
+        const deleteProject = await this.projectCollection().deleteOne({ _id: new ObjectId(id) })
+        return deleteProject
     }
 
     static async findOneAndUpdate(id, projection) {
@@ -31,7 +39,7 @@ class Project {
 
     static async findByPk(id, projection) {
         const projectById = await this.projectCollection().findOne({ _id: new ObjectId(id) }, projection)
-            return projectById
+        return projectById
     }
 }
 

@@ -6,6 +6,8 @@ const User = require("../models/user");
 const Category = require("../models/category");
 const Rating = require("../models/rating")
 const { OAuth2Client } = require("google-auth-library");
+const { ObjectId } = require('mongodb')
+
 
 class Controller {
 
@@ -212,17 +214,10 @@ class Controller {
     try {
       const {
         name,
-        studentId,
         teacherId,
-        startDate,
-        endDate,
-        status,
         description,
-        likes,
         CategoryId,
-        published,
         goals,
-        feedback
       } = req.body;
       if (!name) {
         throw { name: "empty_name/project" };
@@ -238,17 +233,17 @@ class Controller {
       }
       const response = await Project.create({
         name,
-        studentId,
+        studentId: req.user.id,
         teacherId,
-        startDate,
-        endDate,
-        status,
-        likes,
+        startDate: new Date(),
+        endDate: null,
+        status: "submitted", //Submitted, Accepted, Paid, On Progress, Finished
+        likes: 0,
         description,
-        CategoryId,
-        published,
+        CategoryId: new ObjectId(CategoryId),
+        published: false,
         goals,
-        feedback
+        feedback: null
       });
       res
         .status(201)
@@ -263,27 +258,8 @@ class Controller {
 
   static async getProject(req, res, next) {
     try {
-      const projectCollection = getDb().collection('project')
-      const categoriesCollection = getDb().collection('categories')
-
-      const aggregationPipeline = [
-        {
-          $lookup: {
-            from: 'categories', // The name of the collection to join
-            localField: 'CategoryId', // The field from the 'orders' collection
-            foreignField: '_id', // The field from the 'products' collection
-            as: 'project', // The alias for the joined data
-          },
-        },
-      ];
-
-      const results = await categoriesCollection.aggregate(aggregationPipeline).toArray();
-      console.log(results);
-
-      // const getProject = await Project.findAll({});
-      res.status(200).json(results);
-      const getProject = await Project.findAll({});
-      res.status(200).json(getProject);
+      const projects = await Project.findAll()
+      res.json(projects)
     } catch (err) {
       next(err);
     }
