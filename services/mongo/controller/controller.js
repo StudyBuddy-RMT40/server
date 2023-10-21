@@ -91,12 +91,12 @@ class Controller {
       const user = await User.findBy({ email: payload.email })
       if (!user) {
         status = 201
-        const newUser = await User.create({ username: payload.name, email: payload.email, password: "INI_DARI_GOOGLE" })
+        const newUser = await User.create({ username: payload.name, email: payload.email })
         access_token = signToken({ id: newUser.insertedId })
       } else {
         access_token = signToken({ id: user._id })
       }
-      res.status(status).json(access_token)
+      res.status(status).json({ access_token })
     } catch (err) {
       next(err)
     }
@@ -264,21 +264,21 @@ class Controller {
   static async getProject(req, res, next) {
     try {
       const projectCollection = getDb().collection('project')
-    const categoriesCollection = getDb().collection('categories')
+      const categoriesCollection = getDb().collection('categories')
 
-    const aggregationPipeline = [
-      {
-        $lookup: {
-          from: 'categories', // The name of the collection to join
-          localField: 'CategoryId', // The field from the 'orders' collection
-          foreignField: '_id', // The field from the 'products' collection
-          as: 'project', // The alias for the joined data
+      const aggregationPipeline = [
+        {
+          $lookup: {
+            from: 'categories', // The name of the collection to join
+            localField: 'CategoryId', // The field from the 'orders' collection
+            foreignField: '_id', // The field from the 'products' collection
+            as: 'project', // The alias for the joined data
+          },
         },
-      },
-    ];
+      ];
 
-    const results = await categoriesCollection.aggregate(aggregationPipeline).toArray();
-    console.log(results);    
+      const results = await categoriesCollection.aggregate(aggregationPipeline).toArray();
+      console.log(results);
 
       // const getProject = await Project.findAll({});
       res.status(200).json(results);
