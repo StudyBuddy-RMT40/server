@@ -7,6 +7,14 @@ const Category = require("../models/category");
 const Rating = require("../models/rating");
 
 class Controller {
+
+  static async home(req, res, next) {
+    try {
+      res.status(200).send({message: 'StudyBuddy is in da haaaussse'})
+    } catch (err) {
+      next(err)
+    }
+  }
   static async register(req, res, next) {
     try {
       const { username, email, password, phoneNumber, address } = req.body;
@@ -184,6 +192,9 @@ class Controller {
         description,
         likes,
         CategoryId,
+        published,
+        goals,
+        feedback
       } = req.body;
       if (!name) {
         throw { name: "empty_name/project" };
@@ -193,6 +204,9 @@ class Controller {
       }
       if (!CategoryId) {
         throw { name: "empty_categoryId/project" };
+      }
+      if (!goals) {
+        throw { name: "empty_goals/project" };
       }
       const response = await Project.create({
         name,
@@ -204,6 +218,9 @@ class Controller {
         likes,
         description,
         CategoryId,
+        published,
+        goals,
+        feedback
       });
       res
         .status(201)
