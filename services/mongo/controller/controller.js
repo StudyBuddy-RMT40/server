@@ -258,8 +258,8 @@ class Controller {
 
   static async getProject(req, res, next) {
     try {
-      const projects = await Project.findAll()
-      res.json(projects)
+      const getProject = await Project.findAll({});
+      res.status(200).json(getProject);
     } catch (err) {
       next(err);
     }
