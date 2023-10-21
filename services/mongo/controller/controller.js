@@ -294,7 +294,7 @@ class Controller {
     try {
       const { id } = req.params;
       console.log(id, '>>>')
-      const getProjectById = await Project.findAll3(id);
+      const getProjectById = await Project.findByPk(id);
       if (!getProjectById) {
         throw { name: "not_found/project" };
       }
