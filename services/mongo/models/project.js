@@ -42,7 +42,7 @@ class Project {
             from: "categories",
             localField: "categoryId",
             foreignField: "_id",
-            as: "category",
+            as: "Category",
           },
         },
         {
@@ -50,7 +50,7 @@ class Project {
             from: "users",
             localField: "teacherId",
             foreignField: "_id",
-            as: "teacher",
+            as: "Teacher",
           },
         },
         {
@@ -58,17 +58,17 @@ class Project {
             from: "users",
             localField: "studentId",
             foreignField: "_id",
-            as: "student",
+            as: "Student",
           },
         },
         {
-          $unwind: "$category",
+          $unwind: "$Category",
         },
         {
-          $unwind: "$teacher",
+          $unwind: "$Teacher",
         },
         {
-          $unwind: "$student",
+          $unwind: "$Student",
         },
         {
           $project: {
@@ -84,11 +84,12 @@ class Project {
             published: 1,
             goals: 1,
             feedback: 1,
-            category: {
+            Category: 1,
+            Category: {
               _id: 1,
               name: 1,
             },
-            teacher: {
+            Teacher: {
               _id: 1,
               username: 1,
               email: 1,
@@ -96,7 +97,7 @@ class Project {
               role: 1,
               address: 1,
             },
-            student: {
+            Student: {
               _id: 1,
               username: 1,
               email: 1,
@@ -111,7 +112,7 @@ class Project {
             from: "todolists",
             localField: "_id",
             foreignField: "projectId",
-            as: "todos",
+            as: "Todos",
           },
         },
       ])
@@ -119,6 +120,7 @@ class Project {
 
     return projectById[0];
   }
+
   static async findAll() {
     const getProject = await this.projectCollection()
       .aggregate([
@@ -127,7 +129,7 @@ class Project {
             from: "categories",
             localField: "categoryId",
             foreignField: "_id",
-            as: "category",
+            as: "Category",
           },
         },
         {
@@ -135,7 +137,7 @@ class Project {
             from: "users",
             localField: "teacherId",
             foreignField: "_id",
-            as: "teacher",
+            as: "Teacher",
           },
         },
         {
@@ -143,17 +145,17 @@ class Project {
             from: "users",
             localField: "studentId",
             foreignField: "_id",
-            as: "student",
+            as: "Student",
           },
         },
         {
-          $unwind: "$category",
+          $unwind: "$Category",
         },
         {
-          $unwind: "$teacher",
+          $unwind: "$Teacher",
         },
         {
-          $unwind: "$student",
+          $unwind: "$Student",
         },
         {
           $project: {
@@ -169,8 +171,8 @@ class Project {
             published: 1,
             goals: 1,
             feedback: 1,
-            category: 1,
-            teacher: {
+            Category: 1,
+            Teacher: {
               _id: 1,
               username: 1,
               email: 1,
@@ -178,7 +180,7 @@ class Project {
               role: 1,
               address: 1,
             },
-            student: {
+            Student: {
               _id: 1,
               username: 1,
               email: 1,
@@ -193,11 +195,12 @@ class Project {
             from: "todolists",
             localField: "_id",
             foreignField: "projectId",
-            as: "todos",
+            as: "Todos",
           },
         },
       ])
       .toArray();
+
     return getProject;
   }
 }

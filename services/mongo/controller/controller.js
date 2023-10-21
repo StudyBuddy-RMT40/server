@@ -135,7 +135,9 @@ class Controller {
       const updateReview = await User.findOneAndUpdate(id, {
         $set: { username, phoneNumber, address },
       });
-      res.status(200).json({ message: "Update user has success" });
+      res
+        .status(200)
+        .json({ message: "Update user has success", id: updateReview_id });
     } catch (err) {
       next(err);
     }
@@ -145,8 +147,11 @@ class Controller {
     try {
       const { id } = req.user;
       const { role } = req.body;
-      await User.findOneAndUpdate(id, { $set: { role } });
-      res.json({ message: "Role updated successfully" });
+      let updateRoleUser = await User.findOneAndUpdate(id, { $set: { role } });
+      res.json({
+        message: "Role updated successfully",
+        id: updateRoleUser._id,
+      });
     } catch (err) {
       next(err);
     }
