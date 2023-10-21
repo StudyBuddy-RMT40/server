@@ -51,8 +51,10 @@ const errorHandler = (err, req, res, next) => {
     } else if (err.name === 'not_found/category') {
         status = 404
         message = 'Category must be unique'
-    }
-    else if (err.name === 'BSONError') {
+    } else if (err.name === 'empty_goals/project') {
+        status = 400
+        message = 'Goals is required'
+    } else if (err.name === 'BSONError') {
         status = 400
         message = err.message
     }

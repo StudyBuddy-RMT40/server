@@ -35,6 +35,18 @@ afterAll(async () => {
   }
 });
 
+
+describe("root with endpoint / ", () => {
+  it("should respon 200 and body message", async () => {
+    const response = await request(app)
+      .get("/")
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+});
+
+
 describe("Register user with endpoint /register", () => {
   it("Register success", async () => {
     const response = await request(app).post("/register").send({
@@ -144,7 +156,7 @@ describe("Project with endpoint /project", () => {
   let tempId = "";
   it("should respon 201 and body message", async () => {
     const response = await request(app)
-      .post("/project")
+      .post("/projects")
       .send({
         name: "Halo",
         studentId: 1,
@@ -155,6 +167,9 @@ describe("Project with endpoint /project", () => {
         description: "Halo ini untuk test description",
         likes: 10,
         CategoryId: 1,
+        published: false,
+        goals: 'completed testing',
+        feedback: 'nice testing'
       })
       .set("access_token", access_token);
 
@@ -165,7 +180,7 @@ describe("Project with endpoint /project", () => {
 
   it("should respon 200 and body message", async () => {
     const response = await request(app)
-      .get("/project")
+      .get("/projects")
       .set("access_token", access_token);
 
     expect(response.status).toBe(200);
@@ -181,11 +196,14 @@ describe("Project with endpoint /project", () => {
     expect(response.body[0]).toHaveProperty("description", expect.any(String));
     expect(response.body[0]).toHaveProperty("likes", expect.any(Number));
     expect(response.body[0]).toHaveProperty("CategoryId", expect.any(Number));
+    expect(response.body[0]).toHaveProperty("published", expect.any(Boolean));
+    expect(response.body[0]).toHaveProperty("goals", expect.any(String));
+    expect(response.body[0]).toHaveProperty("feedback", expect.any(String));
   });
 
   it("should respon 200 project get by id and body message", async () => {
     const response = await request(app)
-      .get(`/project/${tempId}`)
+      .get(`/projects/${tempId}`)
       .set("access_token", access_token);
 
     expect(response.status).toBe(200);
@@ -201,11 +219,14 @@ describe("Project with endpoint /project", () => {
     expect(response.body).toHaveProperty("description", expect.any(String));
     expect(response.body).toHaveProperty("likes", expect.any(Number));
     expect(response.body).toHaveProperty("CategoryId", expect.any(Number));
+    expect(response.body).toHaveProperty("published", expect.any(Boolean));
+    expect(response.body).toHaveProperty("goals", expect.any(String));
+    expect(response.body).toHaveProperty("feedback", expect.any(String));
   });
 
   it("should respon 404 project not found and body message", async () => {
     const response = await request(app)
-      .get(`/project/6532ac436072c9bb720e3bcb`)
+      .get(`/projects/6532ac436072c9bb720e3bcb`)
       .set("access_token", access_token);
 
     expect(response.status).toBe(404);
@@ -214,7 +235,7 @@ describe("Project with endpoint /project", () => {
 
   it("should respon 400 name invalid and body message", async () => {
     const response = await request(app)
-      .post("/project")
+      .post("/projects")
       .send({
         studentId: 1,
         teacherId: 1,
@@ -224,6 +245,9 @@ describe("Project with endpoint /project", () => {
         description: "Halo ini untuk test description",
         likes: 10,
         CategoryId: 1,
+        published: false,
+        goals: 'completed testing',
+        feedback: 'nice testing'
       })
       .set("access_token", access_token);
 
@@ -233,7 +257,7 @@ describe("Project with endpoint /project", () => {
 
   it("should respon 400 description invalid and body message", async () => {
     const response = await request(app)
-      .post("/project")
+      .post("/projects")
       .send({
         name: "Halo",
         studentId: 1,
@@ -243,6 +267,9 @@ describe("Project with endpoint /project", () => {
         isFinished: true,
         likes: 10,
         CategoryId: 1,
+        published: false,
+        goals: 'completed testing',
+        feedback: 'nice testing'
       })
       .set("access_token", access_token);
 
@@ -252,7 +279,7 @@ describe("Project with endpoint /project", () => {
 
   it("should respon 400 category id invalid and body message", async () => {
     const response = await request(app)
-      .post("/project")
+      .post("/projects")
       .send({
         name: "Halo",
         studentId: 1,
@@ -262,6 +289,31 @@ describe("Project with endpoint /project", () => {
         isFinished: true,
         description: "Halo ini untuk test description",
         likes: 10,
+        published: false,
+        goals: 'completed testing',
+        feedback: 'nice testing'
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 400 goals invalid and body message", async () => {
+    const response = await request(app)
+      .post("/projects")
+      .send({
+        name: "Halo",
+        studentId: 1,
+        teacherId: 1,
+        startDate: "2023-10-1",
+        endDate: "2023-10-10",
+        isFinished: true,
+        description: "Halo ini untuk test description",
+        likes: 10,
+        CategoryId: 1,
+        published: false,
+        feedback: 'nice testing'
       })
       .set("access_token", access_token);
 
@@ -271,7 +323,7 @@ describe("Project with endpoint /project", () => {
 
   it("should respon 200 update project with name and body message", async () => {
     const response = await request(app)
-      .patch(`/project/${tempId}`)
+      .patch(`/projects/${tempId}`)
       .send({
         name: "patch new name",
       })
@@ -283,7 +335,7 @@ describe("Project with endpoint /project", () => {
 
   it("should respon 200 update project with description and body message", async () => {
     const response = await request(app)
-      .patch(`/project/${tempId}`)
+      .patch(`/projects/${tempId}`)
       .send({
         description: "patch new description",
       })
@@ -295,7 +347,7 @@ describe("Project with endpoint /project", () => {
 
   it("should respon 200 update project with isFinished and body message", async () => {
     const response = await request(app)
-      .patch(`/project/${tempId}`)
+      .patch(`/projects/${tempId}`)
       .send({
         isFinished: true,
       })
@@ -307,7 +359,7 @@ describe("Project with endpoint /project", () => {
 
   it("should respon 200 update project with categoryId and body message", async () => {
     const response = await request(app)
-      .patch(`/project/${tempId}`)
+      .patch(`/projects/${tempId}`)
       .send({
         CategoryId: 1,
       })
@@ -319,7 +371,7 @@ describe("Project with endpoint /project", () => {
 
   it("should respon 400 delete project not found and body message", async () => {
     const response = await request(app)
-      .delete(`/project/652ff4ea907670325fb67333asd`)
+      .delete(`/projects/652ff4ea907670325fb67333asd`)
       .set("access_token", access_token);
 
     expect(response.status).toBe(400);
@@ -328,7 +380,7 @@ describe("Project with endpoint /project", () => {
 
   it("should respon 200 delete project and body message", async () => {
     const response = await request(app)
-      .delete(`/project/${tempId}`)
+      .delete(`/projects/${tempId}`)
       .set("access_token", access_token);
 
     expect(response.status).toBe(200);
@@ -337,7 +389,7 @@ describe("Project with endpoint /project", () => {
 
   it("should respon 404 delete project not found and body message", async () => {
     const response = await request(app)
-      .delete(`/project/${tempId}`)
+      .delete(`/projects/${tempId}`)
       .set("access_token", access_token);
 
     expect(response.status).toBe(404);
@@ -349,7 +401,7 @@ describe("Reviews with endpoint /reviews", () => {
   let tempId = "";
   it("should respon 201 and body message", async () => {
     const responseProject = await request(app)
-      .post("/project")
+      .post("/projects")
       .send({
         name: "Halo",
         studentId: 1,
@@ -461,7 +513,7 @@ describe("Reviews with endpoint /reviews", () => {
     expect(response.body).toHaveProperty("message", expect.any(String));
 
     await request(app)
-      .delete(`/project/${tempIdProject}`)
+      .delete(`/projects/${tempIdProject}`)
       .set("access_token", access_token);
   });
 });
