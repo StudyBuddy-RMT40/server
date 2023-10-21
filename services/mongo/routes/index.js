@@ -7,6 +7,7 @@ router.get('/', Controller.home)
 
 router.post('/register', Controller.register)
 router.post('/login', Controller.login)
+router.post('/google-login', Controller.googleLogin)
 
 router.use(authentication)
 
@@ -30,8 +31,8 @@ router.get('/ratings', Controller.getRating)
 router.post('/ratings', Controller.addRating)
 router.put('/ratings/:id', Controller.updateRating)
 
-router.get('/categories',Controller.getCategories)
-router.post('/categories',Controller.addCategories)
-router.delete('/categories/:id',Controller.deleteCategories)
+router.get('/categories', Controller.getCategories)
+router.post('/categories', Controller.addCategories)
+router.delete('/categories/:id', Controller.deleteCategories)
 
 module.exports = router

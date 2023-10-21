@@ -4,20 +4,18 @@ const Review = require("../models/review");
 const Project = require("../models/project");
 const User = require("../models/user");
 const Category = require("../models/category");
-const Rating = require("../models/rating");
-const { getDb } = require('../config/mongo')
-
+const Rating = require("../models/rating")
+const { OAuth2Client } = require("google-auth-library");
 
 class Controller {
 
   static async home(req, res, next) {
     try {
-      res.status(200).send({message: 'StudyBuddy is in da haaaussse'})
+      res.status(200).send({ message: 'StudyBuddy is in da haaaussse' })
     } catch (err) {
       next(err)
     }
   }
-
   static async register(req, res, next) {
     try {
       const { username, email, password, phoneNumber, address } = req.body;
@@ -77,6 +75,33 @@ class Controller {
     }
   }
 
+  static async googleLogin(req, res, next) {
+    try {
+      let status = 200
+      let access_token
+      const { google_token } = req.headers;
+      const client = new OAuth2Client();
+      const ticket = await client.verifyIdToken({
+        idToken: google_token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+
+      const payload = ticket.getPayload();
+
+      const user = await User.findBy({ email: payload.email })
+      if (!user) {
+        status = 201
+        const newUser = await User.create({ username: payload.name, email: payload.email, password: "INI_DARI_GOOGLE" })
+        access_token = signToken({ id: newUser.insertedId })
+      } else {
+        access_token = signToken({ id: user._id })
+      }
+      res.status(status).json(access_token)
+    } catch (err) {
+      next(err)
+    }
+  }
+
   static async getUser(req, res, next) {
     try {
       const user = await User.findAll()
@@ -89,7 +114,7 @@ class Controller {
   // untuk keperluan testing
   static async getUserById(req, res, next) {
     try {
-      const id  = req.params
+      const id = req.params
       const userbyId = await User.findByPk(id)
       console.log(userbyId, 'asdasd')
       res.status(200).json(userbyId);
@@ -100,7 +125,7 @@ class Controller {
 
   static async updateUser(req, res, next) {
     try {
-      const id  = req.user.id
+      const id = req.user.id
       const { username, phoneNumber, address } = req.body;
       const updateReview = await User.findOneAndUpdate(id, {
         $set: { username, phoneNumber, address },
@@ -238,7 +263,7 @@ class Controller {
 
   static async getProject(req, res, next) {
     try {
-    const projectCollection = getDb().collection('project')
+      const projectCollection = getDb().collection('project')
     const categoriesCollection = getDb().collection('categories')
 
     const aggregationPipeline = [
@@ -257,6 +282,8 @@ class Controller {
 
       // const getProject = await Project.findAll({});
       res.status(200).json(results);
+      const getProject = await Project.findAll({});
+      res.status(200).json(getProject);
     } catch (err) {
       next(err);
     }
@@ -362,11 +389,11 @@ class Controller {
     try {
       const { name } = req.body;
       if (!name || name === "") {
-        throw {name: 'name/categories'}
+        throw { name: 'name/categories' }
       }
       let checkCategory = await Category.findByName(name);
       if (checkCategory) {
-        throw {name: 'unique/categories'}
+        throw { name: 'unique/categories' }
       }
       let response = await Category.create({ name: name });
       res.status(201).json({
@@ -392,7 +419,7 @@ class Controller {
       let { id } = req.params;
       let checkCategory = await Category.findById(id);
       if (!checkCategory) {
-        throw {name: 'not_found/category'}
+        throw { name: 'not_found/category' }
       }
       await Category.delete(id);
       res

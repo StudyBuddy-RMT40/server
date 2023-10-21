@@ -36,6 +36,11 @@ class User {
         const updatedUser = await this.userCollection().findOneAndUpdate({ _id: new ObjectId(id) }, projection)
         return updatedUser
     }
+
+    static async findAndModify(document) {
+        const user = await this.userCollection().findAndModify(document)
+        return user
+    }
 }
 
 module.exports = User
