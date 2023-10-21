@@ -4,18 +4,16 @@ const Review = require("../models/review");
 const Project = require("../models/project");
 const User = require("../models/user");
 const Category = require("../models/category");
-const Rating = require("../models/rating")
+const Rating = require("../models/rating");
 const { OAuth2Client } = require("google-auth-library");
-const { ObjectId } = require('mongodb')
-
+const { ObjectId } = require("mongodb");
 
 class Controller {
-
   static async home(req, res, next) {
     try {
-      res.status(200).send({ message: 'StudyBuddy is in da haaaussse' })
+      res.status(200).send({ message: "StudyBuddy is in da haaaussse" });
     } catch (err) {
-      next(err)
+      next(err);
     }
   }
   static async register(req, res, next) {
@@ -79,8 +77,8 @@ class Controller {
 
   static async googleLogin(req, res, next) {
     try {
-      let status = 200
-      let access_token
+      let status = 200;
+      let access_token;
       const { google_token } = req.headers;
       const client = new OAuth2Client();
       const ticket = await client.verifyIdToken({
@@ -90,51 +88,54 @@ class Controller {
 
       const payload = ticket.getPayload();
 
-      const user = await User.findBy({ email: payload.email })
+      const user = await User.findBy({ email: payload.email });
       if (!user) {
-        status = 201
-        const newUser = await User.create({ username: payload.name, email: payload.email })
-        access_token = signToken({ id: newUser.insertedId })
+        status = 201;
+        const newUser = await User.create({
+          username: payload.name,
+          email: payload.email,
+        });
+        access_token = signToken({ id: newUser.insertedId });
       } else {
-        access_token = signToken({ id: user._id })
+        access_token = signToken({ id: user._id });
       }
-      res.status(status).json({ access_token })
+      res.status(status).json({ access_token });
     } catch (err) {
-      next(err)
+      next(err);
     }
   }
 
   static async getUser(req, res, next) {
     try {
-      const user = await User.findAll()
+      const user = await User.findAll();
       res.status(200).json(user);
     } catch (err) {
-      next(err)
+      next(err);
     }
   }
 
   // untuk keperluan testing
   static async getUserById(req, res, next) {
     try {
-      const id = req.params
-      const userbyId = await User.findByPk(id)
-      console.log(userbyId, 'asdasd')
+      const id = req.params;
+      const userbyId = await User.findByPk(id);
+      console.log(userbyId, "asdasd");
       res.status(200).json(userbyId);
     } catch (err) {
-      next(err)
+      next(err);
     }
   }
 
   static async updateUser(req, res, next) {
     try {
-      const id = req.user.id
+      const id = req.user.id;
       const { username, phoneNumber, address } = req.body;
       const updateReview = await User.findOneAndUpdate(id, {
         $set: { username, phoneNumber, address },
       });
       res.status(200).json({ message: "Update user has success" });
     } catch (err) {
-      next(err)
+      next(err);
     }
   }
 
@@ -161,12 +162,10 @@ class Controller {
         UserId: req.user.id,
         ProjectId: projectId,
       });
-      res
-        .status(201)
-        .json({
-          message: "Review created successfully",
-          id: response.insertedId,
-        });
+      res.status(201).json({
+        message: "Review created successfully",
+        id: response.insertedId,
+      });
     } catch (err) {
       next(err);
     }
@@ -212,20 +211,14 @@ class Controller {
 
   static async addProject(req, res, next) {
     try {
-      const {
-        name,
-        teacherId,
-        description,
-        CategoryId,
-        goals,
-      } = req.body;
+      const { name, teacherId, description, categoryId, goals } = req.body;
       if (!name) {
         throw { name: "empty_name/project" };
       }
       if (!description) {
         throw { name: "empty_description/project" };
       }
-      if (!CategoryId) {
+      if (!categoryId) {
         throw { name: "empty_categoryId/project" };
       }
       if (!goals) {
@@ -234,23 +227,21 @@ class Controller {
       const response = await Project.create({
         name,
         studentId: req.user.id,
-        teacherId,
+        teacherId: new ObjectId(teacherId),
         startDate: new Date(),
         endDate: null,
         status: "submitted", //Submitted, Accepted, Paid, On Progress, Finished
         likes: 0,
         description,
-        CategoryId: new ObjectId(CategoryId),
+        categoryId: new ObjectId(categoryId),
         published: false,
         goals,
-        feedback: null
+        feedback: null,
       });
-      res
-        .status(201)
-        .json({
-          message: `Project has been success created`,
-          id: response.insertedId,
-        });
+      res.status(201).json({
+        message: `Project has been success created`,
+        id: response.insertedId,
+      });
     } catch (err) {
       next(err);
     }
@@ -295,7 +286,7 @@ class Controller {
   static async updateProject(req, res, next) {
     try {
       const { id } = req.params;
-      const { name, description, status, CategoryId } = req.body;
+      const { name, description, CategoryId } = req.body;
       if (name) {
         console.log(name, "<<<< Name");
         const nameProject = await Project.findOneAndUpdate(id, {
@@ -310,13 +301,6 @@ class Controller {
         });
         res.status(200).json({ message: "Description updated successfully" });
       }
-      if (status) {
-        console.log(status, "<<<< finishes");
-        const statusProject = await Project.findOneAndUpdate(id, {
-          $set: { status },
-        });
-        res.status(200).json({ message: "status updated successfully" });
-      }
       if (CategoryId) {
         console.log(CategoryId, "<<<< category");
         const categoryIdProject = await Project.findOneAndUpdate(id, {
@@ -324,6 +308,33 @@ class Controller {
         });
         res.status(200).json({ message: "Category id updated successfully" });
       }
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async updateStatusProject(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      const validStatusValues = ["accepted", "paid", "onProgress", "finished"];
+
+      if (!status || !validStatusValues.includes(status)) {
+        throw { name: "invalid_status/status" };
+      }
+
+      const updatedProject = await Project.findOneAndUpdate(id, {
+        $set: { status },
+      });
+
+      if (!updatedProject) {
+        throw { name: "not_found/project" };
+      }
+
+      res
+        .status(200)
+        .json({ message: `Status updated successfully to ${status}` });
     } catch (err) {
       next(err);
     }
@@ -365,11 +376,11 @@ class Controller {
     try {
       const { name } = req.body;
       if (!name || name === "") {
-        throw { name: 'name/categories' }
+        throw { name: "name/categories" };
       }
       let checkCategory = await Category.findByName(name);
       if (checkCategory) {
-        throw { name: 'unique/categories' }
+        throw { name: "unique/categories" };
       }
       let response = await Category.create({ name: name });
       res.status(201).json({
@@ -395,7 +406,7 @@ class Controller {
       let { id } = req.params;
       let checkCategory = await Category.findById(id);
       if (!checkCategory) {
-        throw { name: 'not_found/category' }
+        throw { name: "not_found/category" };
       }
       await Category.delete(id);
       res
