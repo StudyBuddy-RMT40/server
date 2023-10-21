@@ -9,6 +9,8 @@ const { OAuth2Client } = require("google-auth-library");
 const { ObjectId } = require("mongodb");
 const { getDbSession } = require("../config/mongo");
 const TodoList = require("../models/todolist");
+const Specialist = require("../models/specialist");
+const Like = require("../models/like");
 
 class Controller {
   static async home(req, res, next) {
@@ -135,7 +137,9 @@ class Controller {
       const updateReview = await User.findOneAndUpdate(id, {
         $set: { username, phoneNumber, address },
       });
-      res.status(200).json({ message: "Update user has success" });
+      res
+        .status(200)
+        .json({ message: "Update user has success", id: updateReview_id });
     } catch (err) {
       next(err);
     }
@@ -145,8 +149,11 @@ class Controller {
     try {
       const { id } = req.user;
       const { role } = req.body;
-      await User.findOneAndUpdate(id, { $set: { role } });
-      res.json({ message: "Role updated successfully" });
+      let updateRoleUser = await User.findOneAndUpdate(id, { $set: { role } });
+      res.json({
+        message: "Role updated successfully",
+        id: updateRoleUser._id,
+      });
     } catch (err) {
       next(err);
     }
@@ -436,6 +443,17 @@ class Controller {
     }
   }
 
+  static async getCategoriesByName(req, res, next) {
+    try {
+      let { name } = req.params;
+      let { address } = req.query;
+      let getCategories = await Category.findByName(name, address);
+      res.status(200).json(getCategories);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async deleteCategories(req, res, next) {
     try {
       let { id } = req.params;
@@ -449,6 +467,100 @@ class Controller {
         .json({ message: `${checkCategory.name} has been success deleted` });
     } catch (err) {
       next(err);
+    }
+  }
+
+  static async getAllSpecialist(req, res, next) {
+    try {
+      let getAllSpecialist = await Specialist.findAll({});
+      res.status(200).json(getAllSpecialist);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getSpecialistById(req, res, next) {
+    try {
+      let { id } = req.params;
+      let getSpecialis = await Specialist.findById(id);
+      res.status(200).json(getSpecialis);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async addSpecialist(req, res, next) {
+    try {
+      let { id } = req.user;
+      let { specialist } = req.body;
+
+      /// tolong besok pindahin ke authorize ya mas
+      let handlerROle = await User.findByPk(id);
+
+      if (handlerROle.role != "buddy") {
+        return res.status(403).json("Unauthorize, your not buddy");
+      }
+
+      specialist.forEach((e) => {
+        e.teacherId = id;
+        e.categoryId = new ObjectId(e.categoryId);
+      });
+
+      let temp = [];
+      for (const data of specialist) {
+        let getSpecialisId = await Specialist.create(data);
+        temp.push(getSpecialisId.insertedId);
+      }
+
+      res.status(201).json({ message: "data successful add", id: temp });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getAllLike(req, res, next) {
+    try {
+      let likes = await Like.findAll();
+      res.status(200).json(likes);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async addLike(req, res, next) {
+    try {
+      let { id } = req.user;
+      let { projectId } = req.body;
+      let data = {
+        projectId: new ObjectId(projectId),
+        userId: id,
+      };
+
+      let { insertedId } = await Like.create(data);
+
+      res
+        .status(201)
+        .json({ message: "Thanks to like this project", id: insertedId });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteLike(req, res, next) {
+    try {
+      let { id } = req.user;
+      let { projectId } = req.body;
+
+      let response = await Like.delete(id, projectId);
+
+      if (!response) {
+        throw res.status(403).json({ message: "authorize" });
+      }
+      console.log(response);
+
+      res.status(201).json({ message: "Your not love me anymore" });
+    } catch (error) {
+      next(error);
     }
   }
 }

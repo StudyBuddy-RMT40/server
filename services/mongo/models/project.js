@@ -43,6 +43,7 @@ class Project {
             localField: "categoryId",
             foreignField: "_id",
             as: "Category",
+            as: "Category",
           },
         },
         {
@@ -50,6 +51,7 @@ class Project {
             from: "users",
             localField: "teacherId",
             foreignField: "_id",
+            as: "Teacher",
             as: "Teacher",
           },
         },
@@ -85,11 +87,11 @@ class Project {
             goals: 1,
             feedback: 1,
             Category: 1,
-            category: {
+            Category: {
               _id: 1,
               name: 1,
             },
-            teacher: {
+            Teacher: {
               _id: 1,
               username: 1,
               email: 1,
@@ -97,7 +99,7 @@ class Project {
               role: 1,
               address: 1,
             },
-            student: {
+            Student: {
               _id: 1,
               username: 1,
               email: 1,
@@ -158,6 +160,22 @@ class Project {
           $unwind: "$Student",
         },
         {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "projectId",
+            as: "Todos",
+          },
+        },
+        {
+          $lookup: {
+            from: "likes",
+            localField: "_id",
+            foreignField: "projectId",
+            as: "Likes",
+          },
+        },
+        {
           $project: {
             _id: 1,
             name: 1,
@@ -166,7 +184,6 @@ class Project {
             startDate: 1,
             endDate: 1,
             status: 1,
-            likes: 1,
             description: 1,
             published: 1,
             goals: 1,
@@ -188,14 +205,8 @@ class Project {
               role: 1,
               address: 1,
             },
-          },
-        },
-        {
-          $lookup: {
-            from: "todolists",
-            localField: "_id",
-            foreignField: "projectId",
-            as: "Todos",
+            Todos: 1,
+            Likes: { $size: "$Likes" }, 
           },
         },
       ])
