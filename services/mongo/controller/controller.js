@@ -6,6 +6,8 @@ const User = require("../models/user");
 const Category = require("../models/category");
 const Rating = require("../models/rating")
 const { OAuth2Client } = require("google-auth-library");
+const { getDb } = require("../config/mongo");
+
 
 class Controller {
 
@@ -263,25 +265,6 @@ class Controller {
 
   static async getProject(req, res, next) {
     try {
-      const projectCollection = getDb().collection('project')
-    const categoriesCollection = getDb().collection('categories')
-
-    const aggregationPipeline = [
-      {
-        $lookup: {
-          from: 'categories', // The name of the collection to join
-          localField: 'CategoryId', // The field from the 'orders' collection
-          foreignField: '_id', // The field from the 'products' collection
-          as: 'project', // The alias for the joined data
-        },
-      },
-    ];
-
-    const results = await categoriesCollection.aggregate(aggregationPipeline).toArray();
-    console.log(results);    
-
-      // const getProject = await Project.findAll({});
-      res.status(200).json(results);
       const getProject = await Project.findAll({});
       res.status(200).json(getProject);
     } catch (err) {
