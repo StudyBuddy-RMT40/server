@@ -23,16 +23,60 @@ class Category {
     return category;
   }
 
-  static async findByName(name) {
-    const category = await this.projectCollection().findOne({ name: name });
-    return category;
-  }
-
   static async delete(id) {
     const deleteCategory = await this.projectCollection().deleteOne({
       _id: new ObjectId(id),
     });
     return deleteCategory;
+  }
+
+  static async findByName(name, address) {
+    const category = await this.projectCollection().findOne({ name: name });
+
+    if (category) {
+      const categoryId = category._id;
+      const specialists = await getDb()
+        .collection("specialists")
+        .aggregate([
+          {
+            $match: { categoryId: categoryId },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "teacherId",
+              foreignField: "_id",
+              as: "Teacher",
+            },
+          },
+          {
+            $unwind: "$Teacher",
+          },
+          {
+            $project: {
+              categoryId: 0, // Exclude categoryId from the result
+            },
+          },
+          {
+            $project: {
+              "Teacher._id": 1,
+              "Teacher.username": 1,
+              "Teacher.email": 1,
+              "Teacher.phoneNumber": 1,
+              "Teacher.role": 1,
+              "Teacher.address": 1,
+            },
+          },
+          {
+            $match: { "Teacher.address": address },
+          },
+        ])
+        .toArray();
+
+      category.specialists = specialists;
+    }
+
+    return category;
   }
 }
 
