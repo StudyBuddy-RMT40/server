@@ -106,6 +106,14 @@ class Project {
             },
           },
         },
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "projectId",
+            as: "todos",
+          },
+        },
       ])
       .toArray();
 
@@ -178,6 +186,14 @@ class Project {
               role: 1,
               address: 1,
             },
+          },
+        },
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "projectId",
+            as: "todos",
           },
         },
       ])

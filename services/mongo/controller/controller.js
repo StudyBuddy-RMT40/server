@@ -7,6 +7,8 @@ const Category = require("../models/category");
 const Rating = require("../models/rating");
 const { OAuth2Client } = require("google-auth-library");
 const { ObjectId } = require("mongodb");
+const { getDbSession } = require("../config/mongo");
+const TodoList = require("../models/todolist");
 
 class Controller {
   static async home(req, res, next) {
@@ -224,24 +226,55 @@ class Controller {
       if (!goals) {
         throw { name: "empty_goals/project" };
       }
-      const response = await Project.create({
-        name,
-        studentId: req.user.id,
-        teacherId: new ObjectId(teacherId),
-        startDate: new Date(),
-        endDate: null,
-        status: "submitted", //Submitted, Accepted, Paid, On Progress, Finished
-        likes: 0,
-        description,
-        categoryId: new ObjectId(categoryId),
-        published: false,
-        goals,
-        feedback: null,
-      });
-      res.status(201).json({
-        message: `Project has been success created`,
-        id: response.insertedId,
-      });
+      const { db, session } = getDbSession();
+
+      await session.withTransaction(
+        async () => {
+          const response = await Project.create({
+            name,
+            studentId: req.user.id,
+            teacherId: new ObjectId(teacherId),
+            startDate: new Date(),
+            endDate: null,
+            status: "submitted",
+            likes: 0,
+            description,
+            categoryId: new ObjectId(categoryId),
+            published: false,
+            goals,
+            feedback: null,
+          });
+
+          let todos = [
+            {
+              name: "belajar tambah-tambahan",
+              learningUrl: "",
+              projectId: new ObjectId(response.insertedId),
+              isFinished: false,
+            },
+            {
+              name: "belajar tambah-tambahan",
+              learningUrl: "",
+              projectId: new ObjectId(response.insertedId),
+              isFinished: false,
+            },
+          ];
+
+          for (const e of todos) {
+            await TodoList.create(e);
+          }
+
+          res.status(201).json({
+            message: `Project has been successfully created`,
+            id: response.insertedId,
+          });
+        },
+        {
+          readConcern: { level: "local" },
+          writeConcern: { w: "majority" },
+          readPreference: "primary",
+        }
+      );
     } catch (err) {
       next(err);
     }
