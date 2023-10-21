@@ -250,6 +250,7 @@ class Controller {
   static async getProject(req, res, next) {
     try {
       const getProject = await Project.findAll({});
+      console.log(getProject, '<<<<')
       res.status(200).json(getProject);
     } catch (err) {
       next(err);
@@ -259,7 +260,8 @@ class Controller {
   static async getProjectbyId(req, res, next) {
     try {
       const { id } = req.params;
-      const getProjectById = await Project.findByPk(id);
+      console.log(id, '>>>')
+      const getProjectById = await Project.findAll3(id);
       if (!getProjectById) {
         throw { name: "not_found/project" };
       }

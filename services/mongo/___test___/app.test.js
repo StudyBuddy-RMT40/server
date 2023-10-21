@@ -163,10 +163,10 @@ describe("Project with endpoint /project", () => {
         teacherId: 1,
         startDate: "2023-10-1",
         endDate: "2023-10-10",
-        status: "Submitted",
+        status: "submitted",
         description: "Halo ini untuk test description",
         likes: 10,
-        CategoryId: 1,
+        categoryId: 1,
         published: false,
         goals: 'completed testing',
         feedback: 'nice testing'
@@ -648,8 +648,8 @@ describe("Category with endpoint /categories", () => {
   });
 });
 
-describe("User with endpoint /users", () => {
-  it("should respon 200 and body message", async () => {
+describe.only("User with endpoint /users", () => {
+  it("should respon 200 update role user and body message", async () => {
     const response = await request(app)
       .patch("/users")
       .send({
@@ -661,9 +661,23 @@ describe("User with endpoint /users", () => {
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
-  it("should respon 200 and body message", async () => {
+  it("should respon 200 update and body message", async () => {
     const response = await request(app)
       .put("/users")
+      .send({
+        username: "Halo 1", 
+        phoneNumber: "0999", 
+        address: "mawar testing"
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 200 and body message", async () => {
+    const response = await request(app)
+      .get("/users")
       .send({
         username: "Halo 1", 
         phoneNumber: "0999", 

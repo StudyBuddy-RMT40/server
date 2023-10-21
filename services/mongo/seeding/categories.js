@@ -3,7 +3,7 @@ const { hashPassword } = require("../helpers/bcrypt");
 
 const uri = "mongodb://0.0.0.0:27017/";
 const client = new MongoClient(uri);
-const dbName = "study_buddy_1";
+const dbName = "study_buddy";
 
 const dataToSeed = [
   { name: "Matematika" },

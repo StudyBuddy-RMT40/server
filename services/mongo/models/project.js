@@ -184,6 +184,18 @@ class Project {
       .toArray();
     return getProject;
   }
+
+  static async findAll2() {
+    const project = await this.projectCollection().find().toArray();
+    return project;
+  }
+
+  static async findAll3(id) {
+    const category = await this.projectCollection().findOne({
+      _id: new ObjectId(id),
+    });
+    return category;
+  }
 }
 
 module.exports = Project;
