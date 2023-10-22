@@ -22,7 +22,7 @@ class Controller {
   }
   static async register(req, res, next) {
     try {
-      const { username, email, password, phoneNumber, address } = req.body;
+      let { username, email, password, phoneNumber, address } = req.body;
       if (!username) {
         throw { name: "empty_username" };
       }
@@ -38,6 +38,77 @@ class Controller {
       if (!address) {
         throw {name: 'empty_address'}
       }
+
+      // validation phone number length
+      if (phoneNumber.length === 12) {
+        phoneNumber
+      } 
+      else {
+        throw {name: 'phone_length'}
+      }
+
+      // validation email format
+      function validateEmail(email) {
+        const emailRegex = /^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;      
+        return emailRegex.test(email);
+      }
+
+      if (email) {
+        let cek_email = validateEmail(email)
+        if (cek_email === true) {
+          email = email
+        }
+        else {
+          throw {name: 'email_format'}
+        }
+ }
+      
+      // validate address
+      let province_list = [
+        "Aceh",
+        "Bali",
+        "Bangka Belitung",
+        "Banten",
+        "Bengkulu",
+        "Jawa Tengah",
+        "Kalimantan Tengah",
+        "Sulawesi Tengah",
+        "Jawa Timur",
+        "Kalimantan Timur",
+        "Nusa Tenggara Timur",
+        "Gorontalo",
+        "Daerah Khusus Ibukota Jakarta",
+        "Jambi",
+        "Lampung",
+        "Maluku",
+        "Kalimantan Utara",
+        "Maluku Utara",
+        "Sulawesi Utara",
+        "Sumatera Utara",
+        "Papua",
+        "Riau",
+        "Kepulauan Riau",
+        "Kalimantan Selatan",
+        "Sulawesi Selatan",
+        "Sumatera Selatan",
+        "Sulawesi Tenggara",
+        "Jawa Barat",
+        "Kalimantan Barat",
+        "Nusa Tenggara Barat",
+        "Papua Barat",
+        "Sulawesi Barat",
+        "Sumatera Barat",
+        "Daerah Istimewa Yogyakarta"]
+
+      let targetProvince = address
+      targetProvince = targetProvince.replace(/\b\w/g, match => match.toUpperCase());
+      
+      if (province_list.includes(targetProvince)) {
+        address = targetProvince
+      } else {
+        throw {name: 'address_not_in_list'}
+      }
+
       const users = await User.findAll();
       const even = (el) => el.email === email;
       const isRegisteredEmail = users.some(even);
