@@ -1,5 +1,6 @@
 const Controller = require("../controller/controller");
 const authentication = require("../middlewares/authentication");
+const authorizationBuddy = require("../middlewares/authorization");
 
 const router = require("express").Router();
 
@@ -39,11 +40,16 @@ router.delete("/categories/:id", Controller.deleteCategories);
 
 router.get("/specialist", Controller.getAllSpecialist);
 router.get("/specialist/:id", Controller.getSpecialistById);
-router.post("/specialist", Controller.addSpecialist);
+router.post("/specialist", authorizationBuddy, Controller.addSpecialist);
 // router.delete("/specialist/:id");
 
 router.get("/likes", Controller.getAllLike);
 router.post("/likes", Controller.addLike);
 router.delete("/likes", Controller.deleteLike);
+
+router.get("/todos", Controller.getTodos)
+router.get("/todos/:id", Controller.getTodosById)
+router.put("/todos/:id", Controller.updateTodos)
+router.delete("/todos/:id", Controller.deleteTodos)
 
 module.exports = router;

@@ -60,7 +60,42 @@ const errorHandler = (err, req, res, next) => {
   } else if (err.name === "invalid_status/status") {
     status = 400;
     message = "the status only: accepted paid onProgress finished";
+  } else if (err.name === "empty_phoneNumber") {
+    status = 400;
+    message = "Phone Number is require";
+  } else if (err.name === "empty_address") {
+    status = 400;
+    message = "Address is require";
+  } else if (err.name === "empty_role") {
+    status = 400;
+    message = "Role is require";
+  } else if (err.name === "user_not_found") {
+    status = 404;
+    message = "User not found";
+  } else if (err.name === "todos_not_found") {
+    status = 404;
+    message = "Todo not found";
+  } else if (err.name === "name_todos") {
+    status = 400;
+    message = "Name todos is required";
+  } else if (err.name === "learning_todos") {
+    status = 400;
+    message = "Learning todos is required";
+  } else if (err.name === "isFinished_todos") {
+    status = 400;
+    message = "isFinished todos is required";
+  } else if (err.name === "empty_rating") {
+    status = 400;
+    message = "rating is required";
+  } else if (err.name === "forbidden") {
+    status = 403;
+    message = "Unauthorize, your not buddy";
+  } else if (err.name === "empty_projectId") {
+    status = 400;
+    message = "Project Id is required";
   }
+
+  
 
   res.status(status).json({ message });
 };
