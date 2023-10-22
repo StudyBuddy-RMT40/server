@@ -93,7 +93,17 @@ const errorHandler = (err, req, res, next) => {
   } else if (err.name === "empty_projectId") {
     status = 400;
     message = "Project Id is required";
+  } else if (err.name === "address_not_in_list") {
+    status = 400;
+    message = "Address not register in database, please input correct address";
+  } else if (err.name === "phone_length") {
+    status = 400;
+    message = "phone length must 12 character";
+  } else if (err.name === "email_format") {
+    status = 400;
+    message = "input correct email format";
   }
+
 
   
 
