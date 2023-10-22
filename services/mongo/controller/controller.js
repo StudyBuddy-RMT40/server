@@ -43,14 +43,14 @@ class Controller {
       // validation phone number length
       if (phoneNumber.length === 12) {
         phoneNumber
-      } 
+      }
       else {
-        throw {name: 'phone_length'}
+        throw { name: 'phone_length' }
       }
 
       // validation email format
       function validateEmail(email) {
-        const emailRegex = /^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;      
+        const emailRegex = /^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;
         return emailRegex.test(email);
       }
 
@@ -60,10 +60,10 @@ class Controller {
           email = email
         }
         else {
-          throw {name: 'email_format'}
+          throw { name: 'email_format' }
         }
- }
-      
+      }
+
       // validate address
       let province_list = [
         "Aceh",
@@ -103,11 +103,11 @@ class Controller {
 
       let targetProvince = address
       targetProvince = targetProvince.replace(/\b\w/g, match => match.toUpperCase());
-      
+
       if (province_list.includes(targetProvince)) {
         address = targetProvince
       } else {
-        throw {name: 'address_not_in_list'}
+        throw { name: 'address_not_in_list' }
       }
 
       const users = await User.findAll();
@@ -367,14 +367,14 @@ class Controller {
             studentId: req.user.id,
             teacherId: new ObjectId(teacherId),
             startDate: new Date(),
-            endDate: null,
+            endDate: "",
             status: "submitted",
             likes: 0,
             description,
             categoryId: new ObjectId(categoryId),
             published: false,
             goals,
-            feedback: null,
+            feedback: "",
           });
 
           let todos = [
