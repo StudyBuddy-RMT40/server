@@ -1,4 +1,4 @@
-const { comparePassword } = require("../helpers/bcrypt");
+const { comparePassword, hashPassword } = require("../helpers/bcrypt");
 const { signToken } = require("../helpers/jwt");
 const Review = require("../models/review");
 const Project = require("../models/project");
@@ -32,6 +32,12 @@ class Controller {
       if (!password) {
         throw { name: "empty_password" };
       }
+      if (!phoneNumber) {
+        throw {name: 'empty_phoneNumber'}
+      }
+      if (!address) {
+        throw {name: 'empty_address'}
+      }
       const users = await User.findAll();
       const even = (el) => el.email === email;
       const isRegisteredEmail = users.some(even);
@@ -39,7 +45,7 @@ class Controller {
         throw { name: "unique_email" };
       }
 
-      await User.create({
+      const user = await User.create({
         username,
         email,
         password,
@@ -48,7 +54,7 @@ class Controller {
         address,
       });
       res.status(201).json({
-        message: `User with username ${username} successfully created`,
+        message: `User with username ${username} successfully created`
       });
     } catch (err) {
       next(err);
@@ -123,7 +129,9 @@ class Controller {
     try {
       const id = req.params;
       const userbyId = await User.findByPk(id);
-      console.log(userbyId, "asdasd");
+      if (!userbyId) {
+        throw {name: 'user_not_found'}
+      }
       res.status(200).json(userbyId);
     } catch (err) {
       next(err);
@@ -133,13 +141,29 @@ class Controller {
   static async updateUser(req, res, next) {
     try {
       const id = req.user.id;
-      const { username, phoneNumber, address } = req.body;
+      let { username, email, phoneNumber, password, address } = req.body;
+      if (!username) {
+        throw { name: "empty_username" };
+      }
+      if (!email) {
+        throw { name: "empty_email" };
+      }
+      if (!password) {
+        throw { name: "empty_password" };
+      }
+      if (!phoneNumber) {
+        throw {name: 'empty_phoneNumber'}
+      }
+      if (!address) {
+        throw {name: 'empty_address'}
+      }
+      password = hashPassword(password)
       const updateReview = await User.findOneAndUpdate(id, {
-        $set: { username, phoneNumber, address },
+        $set: { username, email, phoneNumber, password, address },
       });
       res
         .status(200)
-        .json({ message: "Update user has success", id: updateReview_id });
+        .json({ message: "Update user has success", id: updateReview._id });
     } catch (err) {
       next(err);
     }
@@ -149,6 +173,9 @@ class Controller {
     try {
       const { id } = req.user;
       const { role } = req.body;
+      if (!role) {
+        throw {name: 'empty_role'}
+      }
       let updateRoleUser = await User.findOneAndUpdate(id, { $set: { role } });
       res.json({
         message: "Role updated successfully",
@@ -392,6 +419,9 @@ class Controller {
   static async addRating(req, res, next) {
     try {
       const { rating } = req.body;
+      if (!rating) {
+        throw {name: 'empty_rating'}
+      }
       const newRating = await Rating.create({ UserId: req.user.id, rating });
       res
         .status(201)
@@ -405,6 +435,9 @@ class Controller {
     try {
       const { id } = req.params;
       const { rating } = req.body;
+      if (!rating) {
+        throw {name: 'empty_rating'}
+      }
       const newRating = await Rating.findOneAndUpdate(id, { $set: { rating } });
       res.status(200).json({ message: "update rating success" });
     } catch (err) {
@@ -492,13 +525,6 @@ class Controller {
       let { id } = req.user;
       let { specialist } = req.body;
 
-      /// tolong besok pindahin ke authorize ya mas
-      let handlerROle = await User.findByPk(id);
-
-      if (handlerROle.role != "buddy") {
-        return res.status(403).json("Unauthorize, your not buddy");
-      }
-
       specialist.forEach((e) => {
         e.teacherId = id;
         e.categoryId = new ObjectId(e.categoryId);
@@ -529,6 +555,9 @@ class Controller {
     try {
       let { id } = req.user;
       let { projectId } = req.body;
+      if (!projectId) {
+        throw {name: 'empty_projectId'}
+      }
       let data = {
         projectId: new ObjectId(projectId),
         userId: id,
@@ -548,7 +577,9 @@ class Controller {
     try {
       let { id } = req.user;
       let { projectId } = req.body;
-
+      if (!projectId) {
+        throw {name: 'empty_projectId'}
+      }
       let response = await Like.delete(id, projectId);
 
       if (!response) {
@@ -556,9 +587,67 @@ class Controller {
       }
       console.log(response);
 
-      res.status(201).json({ message: "Your not love me anymore" });
+      res.status(200).json({ message: "Your not love me anymore" });
     } catch (error) {
       next(error);
+    }
+  }
+
+  static async getTodos(req, res, next) {
+    try {
+      const todos = await TodoList.findAll({})
+      res.status(200).json(todos)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async getTodosById(req, res, next) {
+    try {
+      const {id} = req.params
+      const todos = await TodoList.findById(id)
+      if (!todos) {
+        throw {name: "todos_not_found"}
+      }
+      res.status(200).json(todos)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async updateTodos(req, res, next) {
+    try {
+      const {id} = req.params
+      const {name, learningUrl, isFinished} = req.body
+      if (!name) {
+        throw {name: 'name_todos'}
+      }
+      if (!learningUrl) {
+        throw {name: 'learning_todos'}
+      }
+      if (!isFinished) {
+        throw {name: 'isFinished_todos'}
+      }
+      const todos = await TodoList.findOneAndUpdate(id, {
+        $set: { name, learningUrl, isFinished },
+      });
+      res.status(200).json({ message: "todos updated successfully"})
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async deleteTodos(req, res, next) {
+    try {
+      const { id } = req.params;
+      let checkTodos = await TodoList.findById(id);
+      if (!checkTodos) {
+        throw { name: "todos_not_found" };
+      }
+      const todos = await TodoList.delete(id);
+      res.status(200).json({ message: `todos has been success deleted` });
+    } catch (error) {
+      next(error)
     }
   }
 }

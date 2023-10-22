@@ -43,6 +43,7 @@ class Project {
             localField: "categoryId",
             foreignField: "_id",
             as: "Category",
+            as: "Category",
           },
         },
         {
@@ -50,6 +51,7 @@ class Project {
             from: "users",
             localField: "teacherId",
             foreignField: "_id",
+            as: "Teacher",
             as: "Teacher",
           },
         },

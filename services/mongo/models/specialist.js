@@ -2,17 +2,17 @@ const { getDb } = require("../config/mongo");
 const { ObjectId } = require("mongodb");
 
 class Specialist {
-  static projectCollection() {
+  static specialistCollection() {
     return getDb().collection("specialists");
   }
 
   static async create(data) {
-    const newSpecialist = await this.projectCollection().insertOne(data);
+    const newSpecialist = await this.specialistCollection().insertOne(data);
     return newSpecialist;
   }
 
   static async findAll() {
-    return await this.projectCollection()
+    return await this.specialistCollection()
       .aggregate([
         {
           $lookup: {
@@ -53,7 +53,7 @@ class Specialist {
   static async findById(id) {
     const query = { _id: new ObjectId(id) };
 
-    return await this.projectCollection()
+    return await this.specialistCollection()
       .aggregate([
         {
           $match: query,
@@ -95,7 +95,7 @@ class Specialist {
   }
 
   static async delete(id) {
-    const specialist = await this.projectCollection().deleteOne({
+    const specialist = await this.specialistCollection().deleteOne({
       _id: new ObjectId(id),
     });
     return specialist;
