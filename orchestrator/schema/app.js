@@ -43,7 +43,6 @@ const typeDefs = `#graphql
         startDate: String
         endDate: String
         status: String
-        likes: Int
         description: String
         published: Boolean
         goals: String
@@ -51,7 +50,14 @@ const typeDefs = `#graphql
         Category: Category
         Teacher: Teacher
         Student: Student
-        Todo: [Todo]
+        Todos: [Todo]
+        Likes: [Like]
+    }
+
+    type Like {
+        _id: ID
+        projectId: ID
+        userId: ID
     }
 
     type Category {

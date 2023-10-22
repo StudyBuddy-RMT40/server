@@ -1,4 +1,4 @@
-const { comparePassword } = require("../helpers/bcrypt");
+const { comparePassword, hashPassword } = require("../helpers/bcrypt");
 const { signToken } = require("../helpers/jwt");
 const Review = require("../models/review");
 const Project = require("../models/project");
@@ -9,6 +9,8 @@ const { OAuth2Client } = require("google-auth-library");
 const { ObjectId } = require("mongodb");
 const { getDbSession } = require("../config/mongo");
 const TodoList = require("../models/todolist");
+const Specialist = require("../models/specialist");
+const Like = require("../models/like");
 
 class Controller {
   static async home(req, res, next) {
@@ -18,9 +20,10 @@ class Controller {
       next(err);
     }
   }
+
   static async register(req, res, next) {
     try {
-      const { username, email, password, phoneNumber, address } = req.body;
+      let { username, email, password, phoneNumber, address } = req.body;
       if (!username) {
         throw { name: "empty_username" };
       }
@@ -30,6 +33,83 @@ class Controller {
       if (!password) {
         throw { name: "empty_password" };
       }
+      if (!phoneNumber) {
+        throw { name: "empty_phoneNumber" };
+      }
+      if (!address) {
+        throw { name: "empty_address" };
+      }
+
+      // validation phone number length
+      if (phoneNumber.length === 12) {
+        phoneNumber
+      }
+      else {
+        throw { name: 'phone_length' }
+      }
+
+      // validation email format
+      function validateEmail(email) {
+        const emailRegex = /^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;
+        return emailRegex.test(email);
+      }
+
+      if (email) {
+        let cek_email = validateEmail(email)
+        if (cek_email === true) {
+          email = email
+        }
+        else {
+          throw { name: 'email_format' }
+        }
+      }
+
+      // validate address
+      let province_list = [
+        "Aceh",
+        "Bali",
+        "Bangka Belitung",
+        "Banten",
+        "Bengkulu",
+        "Jawa Tengah",
+        "Kalimantan Tengah",
+        "Sulawesi Tengah",
+        "Jawa Timur",
+        "Kalimantan Timur",
+        "Nusa Tenggara Timur",
+        "Gorontalo",
+        "Daerah Khusus Ibukota Jakarta",
+        "Jambi",
+        "Lampung",
+        "Maluku",
+        "Kalimantan Utara",
+        "Maluku Utara",
+        "Sulawesi Utara",
+        "Sumatera Utara",
+        "Papua",
+        "Riau",
+        "Kepulauan Riau",
+        "Kalimantan Selatan",
+        "Sulawesi Selatan",
+        "Sumatera Selatan",
+        "Sulawesi Tenggara",
+        "Jawa Barat",
+        "Kalimantan Barat",
+        "Nusa Tenggara Barat",
+        "Papua Barat",
+        "Sulawesi Barat",
+        "Sumatera Barat",
+        "Daerah Istimewa Yogyakarta"]
+
+      let targetProvince = address
+      targetProvince = targetProvince.replace(/\b\w/g, match => match.toUpperCase());
+
+      if (province_list.includes(targetProvince)) {
+        address = targetProvince
+      } else {
+        throw { name: 'address_not_in_list' }
+      }
+
       const users = await User.findAll();
       const even = (el) => el.email === email;
       const isRegisteredEmail = users.some(even);
@@ -37,7 +117,7 @@ class Controller {
         throw { name: "unique_email" };
       }
 
-      await User.create({
+      const user = await User.create({
         username,
         email,
         password,
@@ -121,7 +201,35 @@ class Controller {
     try {
       const id = req.params;
       const userbyId = await User.findByPk(id);
-      console.log(userbyId, "asdasd");
+      if (!userbyId) {
+        throw { name: "user_not_found" };
+      }
+      res.status(200).json(userbyId);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getStudentProfile(req, res, next) {
+    try {
+      const { id } = req.user;
+      const userbyId = await User.findDataProfileStudent(id);
+      if (!userbyId) {
+        throw { name: "user_not_found" };
+      }
+      res.status(200).json(userbyId);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getBuddyProfile(req, res, next) {
+    try {
+      const { id } = req.user;
+      const userbyId = await User.findDataProfileTeacher(id);
+      if (!userbyId) {
+        throw { name: "user_not_found" };
+      }
       res.status(200).json(userbyId);
     } catch (err) {
       next(err);
@@ -131,11 +239,29 @@ class Controller {
   static async updateUser(req, res, next) {
     try {
       const id = req.user.id;
-      const { username, phoneNumber, address } = req.body;
+      let { username, email, phoneNumber, password, address } = req.body;
+      if (!username) {
+        throw { name: "empty_username" };
+      }
+      if (!email) {
+        throw { name: "empty_email" };
+      }
+      if (!password) {
+        throw { name: "empty_password" };
+      }
+      if (!phoneNumber) {
+        throw { name: "empty_phoneNumber" };
+      }
+      if (!address) {
+        throw { name: "empty_address" };
+      }
+      password = hashPassword(password);
       const updateReview = await User.findOneAndUpdate(id, {
-        $set: { username, phoneNumber, address },
+        $set: { username, email, phoneNumber, password, address },
       });
-      res.status(200).json({ message: "Update user has success", id: updateReview._id });
+      res
+        .status(200)
+        .json({ message: "Update user has success", id: updateReview._id });
     } catch (err) {
       next(err);
     }
@@ -145,6 +271,9 @@ class Controller {
     try {
       const { id } = req.user;
       const { role } = req.body;
+      if (!role) {
+        throw { name: "empty_role" };
+      }
       let updateRoleUser = await User.findOneAndUpdate(id, { $set: { role } });
       res.json({
         message: "Role updated successfully",
@@ -322,25 +451,31 @@ class Controller {
   static async updateProject(req, res, next) {
     try {
       const { id } = req.params;
-      const { name, description, CategoryId } = req.body;
+      const { name, description, categoryId } = req.body;
+      if (!name) {
+        throw { name: "empty_name/project" };
+      }
+      if (!description) {
+        throw { name: "empty_description/project" };
+      }
+      if (!categoryId) {
+        throw { name: "empty_categoryId/project" };
+      }
       if (name) {
-        console.log(name, "<<<< Name");
         const nameProject = await Project.findOneAndUpdate(id, {
           $set: { name },
         });
         res.status(200).json({ message: "Name updated successfully" });
       }
       if (description) {
-        console.log(description, "<<<< Description");
         const descriptionProject = await Project.findOneAndUpdate(id, {
           $set: { description },
         });
         res.status(200).json({ message: "Description updated successfully" });
       }
-      if (CategoryId) {
-        console.log(CategoryId, "<<<< category");
+      if (categoryId) {
         const categoryIdProject = await Project.findOneAndUpdate(id, {
-          $set: { CategoryId },
+          $set: { categoryId },
         });
         res.status(200).json({ message: "Category id updated successfully" });
       }
@@ -385,13 +520,73 @@ class Controller {
     }
   }
 
-  static async addRating(req, res, next) {
+  static async addRatingStundent(req, res, next) {
     try {
-      const { rating } = req.body;
-      const newRating = await Rating.create({ UserId: req.user.id, rating });
-      res
-        .status(201)
-        .json({ message: "add rating success", id: newRating.insertedId });
+      let { rating, studentId, projectId } = req.body;
+      console.log(req.body);
+      if (!rating || !studentId || !projectId) {
+        return res
+          .status(400)
+          .json({ message: "rating studentId projectId is required" });
+      }
+
+      rating = parseFloat(rating);
+
+      if (isNaN(rating) || rating < 0 || rating > 5) {
+        return res
+          .status(400)
+          .json({ message: "Rating must be a number between 0 and 5" });
+      }
+
+      let existingRating = await Rating.findStudentId(studentId, projectId);
+
+      if (existingRating) {
+        return res.status(403).json({ message: "already have rating" });
+      }
+
+      await Rating.create({
+        studentId: new ObjectId(studentId),
+        projectId: new ObjectId(projectId),
+        rating,
+      });
+
+      res.status(201).json({ message: "Add rating success" });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async addRatingBuddy(req, res, next) {
+    try {
+      let { rating, teacherId, projectId } = req.body;
+
+      if (!rating || !teacherId || !projectId) {
+        return res
+          .status(400)
+          .json({ message: "rating teacherId projectId is required" });
+      }
+
+      rating = parseFloat(rating);
+
+      if (isNaN(rating) || rating < 0 || rating > 5) {
+        return res
+          .status(400)
+          .json({ message: "Rating must be a number between 0 and 5" });
+      }
+
+      let existingRating = await Rating.findTeacherId(teacherId, projectId);
+
+      if (existingRating) {
+        return res.status(403).json({ message: "already have rating" });
+      }
+
+      await Rating.create({
+        teacherId: new ObjectId(teacherId),
+        projectId: new ObjectId(projectId),
+        rating,
+      });
+
+      res.status(201).json({ message: "Add rating success" });
     } catch (err) {
       next(err);
     }
@@ -401,6 +596,9 @@ class Controller {
     try {
       const { id } = req.params;
       const { rating } = req.body;
+      if (!rating) {
+        throw { name: "empty_rating" };
+      }
       const newRating = await Rating.findOneAndUpdate(id, { $set: { rating } });
       res.status(200).json({ message: "update rating success" });
     } catch (err) {
@@ -437,6 +635,17 @@ class Controller {
     }
   }
 
+  static async getCategoriesByName(req, res, next) {
+    try {
+      let { name } = req.params;
+      let { address } = req.query;
+      let getCategories = await Category.findByName(name, address);
+      res.status(200).json(getCategories);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async deleteCategories(req, res, next) {
     try {
       let { id } = req.params;
@@ -450,6 +659,155 @@ class Controller {
         .json({ message: `${checkCategory.name} has been success deleted` });
     } catch (err) {
       next(err);
+    }
+  }
+
+  static async getAllSpecialist(req, res, next) {
+    try {
+      let getAllSpecialist = await Specialist.findAll({});
+      res.status(200).json(getAllSpecialist);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getSpecialistById(req, res, next) {
+    try {
+      let { id } = req.params;
+      let getSpecialis = await Specialist.findById(id);
+      res.status(200).json(getSpecialis);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async addSpecialist(req, res, next) {
+    try {
+      let { id } = req.user;
+      let { specialist } = req.body;
+
+      specialist.forEach((e) => {
+        e.teacherId = id;
+        e.categoryId = new ObjectId(e.categoryId);
+      });
+
+      let temp = [];
+      for (const data of specialist) {
+        let getSpecialisId = await Specialist.create(data);
+        temp.push(getSpecialisId.insertedId);
+      }
+
+      res.status(201).json({ message: "data successful add", id: temp });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getAllLike(req, res, next) {
+    try {
+      let likes = await Like.findAll();
+      res.status(200).json(likes);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async addLike(req, res, next) {
+    try {
+      let { id } = req.user;
+      let { projectId } = req.body;
+      if (!projectId) {
+        throw { name: "empty_projectId" };
+      }
+      let data = {
+        projectId: new ObjectId(projectId),
+        userId: id,
+      };
+
+      let { insertedId } = await Like.create(data);
+
+      res
+        .status(201)
+        .json({ message: "Thanks to like this project", id: insertedId });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteLike(req, res, next) {
+    try {
+      let { id } = req.user;
+      let { projectId } = req.body;
+      if (!projectId) {
+        throw { name: "empty_projectId" };
+      }
+      let response = await Like.delete(id, projectId);
+
+      if (!response) {
+        throw res.status(403).json({ message: "authorize" });
+      }
+
+      res.status(200).json({ message: "Your not love me anymore" });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getTodos(req, res, next) {
+    try {
+      const todos = await TodoList.findAll({});
+      res.status(200).json(todos);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getTodosById(req, res, next) {
+    try {
+      const { id } = req.params;
+      const todos = await TodoList.findById(id);
+      if (!todos) {
+        throw { name: "todos_not_found" };
+      }
+      res.status(200).json(todos);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateTodos(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { name, learningUrl, isFinished } = req.body;
+      if (!name) {
+        throw { name: "name_todos" };
+      }
+      if (!learningUrl) {
+        throw { name: "learning_todos" };
+      }
+      if (!isFinished) {
+        throw { name: "isFinished_todos" };
+      }
+      const todos = await TodoList.findOneAndUpdate(id, {
+        $set: { name, learningUrl, isFinished },
+      });
+      res.status(200).json({ message: "todos updated successfully" });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteTodos(req, res, next) {
+    try {
+      const { id } = req.params;
+      let checkTodos = await TodoList.findById(id);
+      if (!checkTodos) {
+        throw { name: "todos_not_found" };
+      }
+      const todos = await TodoList.delete(id);
+      res.status(200).json({ message: `todos has been success deleted` });
+    } catch (error) {
+      next(error);
     }
   }
 }
