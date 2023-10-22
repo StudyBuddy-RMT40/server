@@ -25,7 +25,7 @@ class Like {
 
   static async delete(id, projectId) {
     const deleteCategory = await this.likeCollection().deleteOne({
-      $and: [{ _id: new ObjectId(id) }, { projectId: projectId }],
+      $and: [{ userId: new ObjectId(id) }, { projectId: new ObjectId(projectId) }],
     });
     return deleteCategory;
   }
