@@ -12,10 +12,17 @@ router.post("/google-login", Controller.googleLogin);
 
 router.use(authentication);
 
+// dijalankan setelah login
+router.patch("/users", Controller.updateRoleUser);
+
+// dapetin semua data user
 router.get("/users", Controller.getUser);
 router.get("/users/:id", Controller.getUserById);
 router.put("/users", Controller.updateUser);
-router.patch("/users", Controller.updateRoleUser);
+
+// tambahin di tdd untuk student & buddy
+router.get("/student_profile", Controller.getStudentProfile);
+router.get("/buddy_profile", Controller.getBuddyProfile);
 
 router.post("/reviews/:projectId", Controller.createReview);
 router.get("/reviews", Controller.getReviews);
@@ -30,8 +37,11 @@ router.put("/projects/:id", Controller.updateProject);
 router.patch("/projects/:id", Controller.updateStatusProject);
 
 router.get("/ratings", Controller.getRating);
-router.post("/ratings", Controller.addRating);
 router.put("/ratings/:id", Controller.updateRating);
+
+// tambahin di tdd + authorize
+router.post("/ratings/student", Controller.addRatingStundent);
+router.post("/ratings/buddy", Controller.addRatingBuddy);
 
 router.get("/categories", Controller.getCategories);
 router.get("/categories/:name", Controller.getCategoriesByName);
@@ -47,9 +57,9 @@ router.get("/likes", Controller.getAllLike);
 router.post("/likes", Controller.addLike);
 router.delete("/likes", Controller.deleteLike);
 
-router.get("/todos", Controller.getTodos)
-router.get("/todos/:id", Controller.getTodosById)
-router.put("/todos/:id", Controller.updateTodos)
-router.delete("/todos/:id", Controller.deleteTodos)
+router.get("/todos", Controller.getTodos);
+router.get("/todos/:id", Controller.getTodosById);
+router.put("/todos/:id", Controller.updateTodos);
+router.delete("/todos/:id", Controller.deleteTodos);
 
 module.exports = router;
