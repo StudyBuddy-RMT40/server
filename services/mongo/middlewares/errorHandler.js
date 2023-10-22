@@ -102,10 +102,10 @@ const errorHandler = (err, req, res, next) => {
   } else if (err.name === "email_format") {
     status = 400;
     message = "input correct email format";
+  } else if (err.name === "cannot_access_payment") {
+    status = 400;
+    message = "You cannot access payment";
   }
-
-
-  
 
   res.status(status).json({ message });
 };

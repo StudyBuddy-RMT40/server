@@ -11,6 +11,7 @@ const { getDbSession } = require("../config/mongo");
 const TodoList = require("../models/todolist");
 const Specialist = require("../models/specialist");
 const Like = require("../models/like");
+const midtransClient = require('midtrans-client')
 
 class Controller {
   static async home(req, res, next) {
@@ -520,7 +521,7 @@ class Controller {
     }
   }
 
-  static async addRatingStundent(req, res, next) {
+  static async addRatingStudent(req, res, next) {
     try {
       let { rating, studentId, projectId } = req.body;
       console.log(req.body);
@@ -810,6 +811,45 @@ class Controller {
       next(error);
     }
   }
+
+  static async generateMidtrans(req, res, next) {
+    try {
+
+      const {projectId} = req.params
+      const project = await Project.findByPk(projectId)
+
+      if (project.status !== "submitted" && project.Students.role !== "student" ) {
+        throw {name: 'cannot_access_payment'}
+      }
+
+      let snap = new midtransClient.Snap({
+          // Set to true if you want Production Environment (accept real transaction).
+          isProduction : false,
+          serverKey : process.env.MIDTRANS_SERVER_KEY
+      });
+
+      let parameter = {
+          "transaction_details": {
+              "order_id": "TRANSACTION_" + Math.floor(1000 + Math.random() * 2000),
+              "gross_amount": 5000
+          },
+          "credit_card":{
+              "secure" : true
+          },
+          "customer_details": {
+              "first_name": project.Student.username,
+              "email": project.Student.email,
+              "phone": project.Student.phoneNumber
+          }
+      };
+
+      const midtransToken = await snap.createTransaction(parameter)
+      res.status(201).json(midtransToken)
+  } catch (error) {
+      next(error)
+  }
+  }
+
 }
 
 module.exports = Controller;
