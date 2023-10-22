@@ -73,6 +73,13 @@ const typeDefs = `#graphql
         isFinished: Boolean
     }
 
+    type Review {
+        _id: ID
+        projectId: ID
+        userId: ID
+        comment: String
+    }
+
     type AccessToken {
         access_token: String
     }
@@ -103,6 +110,7 @@ const typeDefs = `#graphql
         getUser(id: ID): User
         getProjects: [Project]
         getProject(id: ID): Project
+        getReviews: [Review]
     }
 
     type Mutation {
@@ -114,6 +122,9 @@ const typeDefs = `#graphql
         deleteProject(id: ID): Message
         putProject(id: ID, project: ProjectInput): Message
         patchProject(id: ID, project: ProjectInput): Message
+        addReview(projectId: ID, comment: String): Message
+        deleteReview(id: ID): Message
+        putReview(id: ID, comment: String): Message
     }
 
 `
@@ -196,7 +207,26 @@ const resolvers = {
                 }
                 return project
             } catch (err) {
-                throw err
+                throw err.response.data
+            }
+        },
+        getReviews: async () => {
+            try {
+                let reviews = await redis.get("reviews")
+                if (!reviews) {
+                    const { data } = await axios(`${BASE_URL}/reviews`, {
+                        headers: {
+                            access_token
+                        }
+                    })
+                    reviews = data
+                    await redis.set('reviews', JSON.stringify(data))
+                } else {
+                    reviews = JSON.parse(reviews)
+                }
+                return reviews
+            } catch (err) {
+                throw err.response.data
             }
         }
     },
@@ -307,6 +337,50 @@ const resolvers = {
                 return data
             } catch (err) {
                 throw err.response.data
+            }
+        },
+        addReview: async (_, args) => {
+            try {
+                const { projectId, comment } = args
+                const { data } = await axios.post(`${BASE_URL}/reviews/${projectId}`, { comment }, {
+                    headers: {
+                        access_token
+                    }
+                })
+                await redis.del('reviews')
+                return data
+            } catch (err) {
+                throw err.response.data
+            }
+        },
+        deleteReview: async (_, args) => {
+            try {
+                const { id } = args
+                const { data } = await axios.delete(`${BASE_URL}/reviews/${id}`, {
+                    headers: {
+                        access_token
+                    }
+                })
+                await redis.del("reviews")
+                await redis.del(`review:${id}`)
+                return data
+            } catch (err) {
+                throw err.response.data
+            }
+        },
+        putReview: async (_, args) => {
+            try {
+                const { id, comment } = args
+                const { data } = await axios.put(`${BASE_URL}/reviews/${id}`, { comment }, {
+                    headers: {
+                        access_token
+                    }
+                })
+                await redis.del("reviews")
+                await redis.del(`review:${id}`)
+                return data
+            } catch (err) {
+                throw err.reponse.data
             }
         }
     }

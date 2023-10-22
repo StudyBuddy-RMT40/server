@@ -293,8 +293,8 @@ class Controller {
       }
       const response = await Review.create({
         comment,
-        UserId: req.user.id,
-        ProjectId: projectId,
+        userId: req.user.id,
+        projectId: new ObjectId(projectId),
       });
       res.status(201).json({
         message: "Review created successfully",
