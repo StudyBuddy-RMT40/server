@@ -35,6 +35,12 @@ const typeDefs = `#graphql
         address: String
     }
 
+    type Rating {
+        _id: ID
+        userId: ID
+        rating: Int
+    }
+
     type Project {
         _id: ID
         name: String
@@ -111,6 +117,7 @@ const typeDefs = `#graphql
         getProjects: [Project]
         getProject(id: ID): Project
         getReviews: [Review]
+        getRatings: [Rating]
     }
 
     type Mutation {
@@ -125,6 +132,7 @@ const typeDefs = `#graphql
         addReview(projectId: ID, comment: String): Message
         deleteReview(id: ID): Message
         putReview(id: ID, comment: String): Message
+        putRating(id: ID, rating: Int): Message
     }
 
 `
@@ -225,6 +233,25 @@ const resolvers = {
                     reviews = JSON.parse(reviews)
                 }
                 return reviews
+            } catch (err) {
+                throw err.response.data
+            }
+        },
+        getRatings: async () => {
+            try {
+                let ratings = await redis.get('ratings')
+                if (!ratings) {
+                    const { data } = await axios(`${BASE_URL}/ratings`, {
+                        headers: {
+                            access_token
+                        }
+                    })
+                    ratings = data
+                    await redis.set("ratings", JSON.stringify(data))
+                } else {
+                    ratings = JSON.parse(ratings)
+                }
+                return ratings
             } catch (err) {
                 throw err.response.data
             }
@@ -381,6 +408,20 @@ const resolvers = {
                 return data
             } catch (err) {
                 throw err.reponse.data
+            }
+        },
+        putRating: async (_, args) => {
+            try {
+                const { id, rating } = args
+                const { data } = await axios.put(`${BASE_URL}/ratings/${id}`, { rating }, {
+                    headers: {
+                        access_token
+                    }
+                })
+                await redis.del("ratings")
+                return data
+            } catch (err) {
+                throw err.response.data
             }
         }
     }
