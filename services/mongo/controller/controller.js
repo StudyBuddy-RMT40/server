@@ -451,25 +451,31 @@ class Controller {
   static async updateProject(req, res, next) {
     try {
       const { id } = req.params;
-      const { name, description, CategoryId } = req.body;
+      const { name, description, categoryId } = req.body;
+      if (!name) {
+        throw { name: "empty_name/project" };
+      }
+      if (!description) {
+        throw { name: "empty_description/project" };
+      }
+      if (!categoryId) {
+        throw { name: "empty_categoryId/project" };
+      }
       if (name) {
-        console.log(name, "<<<< Name");
         const nameProject = await Project.findOneAndUpdate(id, {
           $set: { name },
         });
         res.status(200).json({ message: "Name updated successfully" });
       }
       if (description) {
-        console.log(description, "<<<< Description");
         const descriptionProject = await Project.findOneAndUpdate(id, {
           $set: { description },
         });
         res.status(200).json({ message: "Description updated successfully" });
       }
-      if (CategoryId) {
-        console.log(CategoryId, "<<<< category");
+      if (categoryId) {
         const categoryIdProject = await Project.findOneAndUpdate(id, {
-          $set: { CategoryId },
+          $set: { categoryId },
         });
         res.status(200).json({ message: "Category id updated successfully" });
       }
