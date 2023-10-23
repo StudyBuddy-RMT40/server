@@ -10,7 +10,7 @@ const {
 const request = require("supertest");
 const app = require("../app");
 const User = require("../models/user");
-const { connectTest, client, getDbTest } = require("../config/mongo");
+const { connectTest, client, getDbTest, db } = require("../config/mongo");
 const { signToken } = require("../helpers/jwt");
 const Review = require("../models/review");
 const Project = require("../models/project");
@@ -27,23 +27,21 @@ let access_token_teacher;
 let projectId;
 beforeEach(async () => {
   try {
-    await connectTest();
-    jest.restoreAllMocks();
-    user = await User.findBy({ email: "najmi@mail.com" });
-    access_token = signToken({ id: user._id });
+    await connectTest(async () => {
+      jest.restoreAllMocks();
+      user = await User.findBy({ email: "najmi@mail.com" });
+      access_token = signToken({ id: user._id });
+    });
   } catch (error) {
-    // console.log(error);
+    console.log(error);
   }
 });
 
 afterAll(async () => {
   try {
-    // const a = await getDbTest().deleteMany({})
-    let db = 'study_buddy_test'
-    await db.dropDatabase();
     await client.close();
   } catch (error) {
-    // console.log(error);
+    console.log(error);
   }
 });
 
@@ -461,7 +459,10 @@ describe("User with endpoint /student_profile", () => {
   it("should respon 403 user not found and body message", async () => {
     const response = await request(app)
       .get("/student_profile")
-      .set("access_token", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1MzQwODM4ODU2YWQzZjdkNmNmZmRiZCIsImlhdCI6MTY5Nzk0NzM4MX0.9u2DZOrF6b-sMElXm7fQI0XG6s2Fnykqd0EsmIUUkRM");
+      .set(
+        "access_token",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1MzQwODM4ODU2YWQzZjdkNmNmZmRiZCIsImlhdCI6MTY5Nzk0NzM4MX0.9u2DZOrF6b-sMElXm7fQI0XG6s2Fnykqd0EsmIUUkRM"
+      );
 
     expect(response.status).toBe(403);
     expect(response.body).toHaveProperty("message", expect.any(String));
@@ -849,7 +850,6 @@ describe("Project with endpoint /project", () => {
       })
       .set("access_token", access_token);
 
-
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
@@ -885,7 +885,7 @@ describe("Project with endpoint /project", () => {
     const response = await request(app)
       .put(`/projects/${tempId}`)
       .send({
-        name: 'testing update',
+        name: "testing update",
         categoryId: categoriesId,
       })
       .set("access_token", access_token);
@@ -898,8 +898,8 @@ describe("Project with endpoint /project", () => {
     const response = await request(app)
       .put(`/projects/${tempId}`)
       .send({
-        name: 'testing update',
-        description: 'testing update'
+        name: "testing update",
+        description: "testing update",
       })
       .set("access_token", access_token);
 
@@ -1086,7 +1086,7 @@ describe("Rating with endpoint /rating", () => {
       .send({
         rating: 4,
         studentId: studentId,
-        projectId: projectId
+        projectId: projectId,
       })
       .set("access_token", access_token_teacher);
 
@@ -1101,7 +1101,7 @@ describe("Rating with endpoint /rating", () => {
       .send({
         rating: 3,
         teacherId: teacherId,
-        projectId: projectId
+        projectId: projectId,
       })
       .set("access_token", access_token);
 
@@ -1534,4 +1534,7 @@ describe("Wallet with endpoint /wallet", () => {
       "No finished wallets found"
     );
   });
+});
+describe("mediaUrls with endpoint /upload_docs", () => {
+  it("should add a new mediaUrls", async () => {});
 });
