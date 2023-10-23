@@ -14,20 +14,22 @@ class Wallet {
   static async getAllMyWallet(teacherId) {
     const cursor = await this.walletCollection().find({
       teacherId: new ObjectId(teacherId),
-      status: { $in: ["success"] },
+      status: { $in: ["finished"] },
     });
     const wallets = await cursor.toArray();
 
-    const totalWalletAmount = wallets.reduce((total, wallet) => {
-      return total + wallet.amount;
-    }, 0);
+    console.log(wallets, "<<<<<<<<<<<<<<<<<< DATA WALLET COY");
+    const totalWalletAmount = wallets.reduce(
+      (total, wallet) => total + wallet.amount,
+      0
+    );
 
     return totalWalletAmount;
   }
 
   static async findOneAndUpdateStatus(id, projection) {
     const response = await this.walletCollection().findOneAndUpdate(
-      { _id: new ObjectId(id) },
+      { projectId: new ObjectId(id) },
       projection
     );
     return response;
@@ -35,25 +37,20 @@ class Wallet {
 
   static async findOneAndUpdate(id, projection) {
     const response = await this.walletCollection().findOneAndUpdate(
-      { techerId: new ObjectId(id) },
+      { _id: new ObjectId(id) },
       projection
     );
     return response;
   }
 
   static async getWalletsByStatus(teacherId, status) {
-    try {
-      const cursor = await this.walletCollection().find({
-        teacherId: new ObjectId(teacherId),
-        status: status,
-      });
-      const wallets = await cursor.toArray();
-      return wallets;
-    } catch (error) {
-      throw error;
-    }
+    const cursor = await this.walletCollection().find({
+      teacherId: new ObjectId(teacherId),
+      status: status,
+    });
+    const wallets = await cursor.toArray();
+    return wallets;
   }
-  
 }
 
 module.exports = Wallet;
