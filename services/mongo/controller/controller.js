@@ -815,6 +815,11 @@ class Controller {
   static async generateMidtrans(req, res, next) {
     try {
 
+      const { price } = req.body
+      if (!price) {
+        throw {name: 'empty_price'}
+      }
+
       const {projectId} = req.params
       const project = await Project.findByPk(projectId)
 
@@ -831,7 +836,7 @@ class Controller {
       let parameter = {
           "transaction_details": {
               "order_id": "TRANSACTION_" + Math.floor(1000 + Math.random() * 2000),
-              "gross_amount": 5000
+              "gross_amount": Number(price)
           },
           "credit_card":{
               "secure" : true

@@ -125,7 +125,8 @@ class Project {
 
   static async findAll() {
     const getProject = await this.projectCollection()
-      .aggregate([
+      .aggregate(
+      [
         {
           $lookup: {
             from: "categories",
@@ -209,7 +210,8 @@ class Project {
             Likes: { $size: "$Likes" }, 
           },
         },
-      ])
+      ]
+    )
       .toArray();
 
     return getProject;
