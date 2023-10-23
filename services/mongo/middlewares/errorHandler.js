@@ -108,6 +108,9 @@ const errorHandler = (err, req, res, next) => {
   } else if (err.name === "empty_price") {
     status = 400;
     message = "Price is require";
+  } else if (err.name === "empty_updated") {
+    status = 400;
+    message = "Output updated is null";
   }
 
   res.status(status).json({ message });

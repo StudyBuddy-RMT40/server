@@ -14,6 +14,7 @@ const { connectTest, client, getDbTest } = require("../config/mongo");
 const { signToken } = require("../helpers/jwt");
 const Review = require("../models/review");
 const Project = require("../models/project");
+const Rating = require("../models/rating");
 
 let user;
 let access_token;
@@ -462,6 +463,16 @@ describe("User with endpoint /student_profile", () => {
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(User, "findDataProfileStudent").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/student_profile")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
   // belum selesai
   // it("should respon 400 user not found and body message", async () => {
   //   const response = await request(app)
@@ -488,6 +499,16 @@ describe("User with endpoint /student_profile", () => {
     expect(response.body).toHaveProperty("phoneNumber", expect.any(String));
     expect(response.body).toHaveProperty("role", expect.any(String));
     expect(response.body).toHaveProperty("address", expect.any(String));
+  });
+
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(User, "findDataProfileTeacher").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/buddy_profile")
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
   // belum selesai
@@ -619,7 +640,6 @@ describe("Project with endpoint /project", () => {
       .get("/projects")
       .set("access_token", access_token);
 
-    console.log(response.body, "<>>><><");
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
 
@@ -647,13 +667,9 @@ describe("Project with endpoint /project", () => {
   });
 
   it("should respon 200 project get by id and body message", async () => {
-    console.log(tempId, "<<<");
-
     const response = await request(app)
       .get(`/projects/${tempId}`)
       .set("access_token", access_token);
-
-    console.log(response.body, ">>>>> res");
 
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Object);
@@ -834,6 +850,20 @@ describe("Project with endpoint /project", () => {
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
+  it("should respon 400 update project output not found and body message", async () => {
+    const response = await request(app)
+      .put(`/projects/65340a71856ad3f7d6cffdc3`)
+      .send({
+        name: "testing update",
+        description: "testing update desc",
+        categoryId: categoriesId,
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
   it("should respon 400 update project without name and body message", async () => {
     const response = await request(app)
       .put(`/projects/${tempId}`)
@@ -883,6 +913,17 @@ describe("Project with endpoint /project", () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
+
+  // it("should respon 200 update project with id not found status and body message", async () => {
+  //   const response = await request(app)
+  //     .patch(`/projects/65340a71856ad3f7d6cffdc3`)
+  //     .send({
+  //       status: "onProgress",
+  //     })
+  //     .set("access_token", access_token);
+  //   expect(response.status).toBe(200);
+  //   expect(response.body).toHaveProperty("message", expect.any(String));
+  // });
 
   it("should respon 400 update project with wrong status and body message", async () => {
     const response = await request(app)
@@ -1076,6 +1117,16 @@ describe("Rating with endpoint /rating", () => {
     expect(response.body[0]).toHaveProperty("rating", expect.any(Number));
     expect(response.body[0]).toHaveProperty("projectId", expect.any(String));
     expect(response.body[0]).toHaveProperty("studentId", expect.any(String));
+  });
+
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(Rating, "findAll").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/ratings")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
   it("should respon 200 update rating and body message", async () => {
@@ -1338,7 +1389,7 @@ describe("Authentication with endpoint /users and /project", () => {
     expect(response.body[0]).toHaveProperty("email", expect.any(String));
     expect(response.body[0]).toHaveProperty("password", expect.any(String));
     expect(response.body[0]).toHaveProperty("phoneNumber", expect.any(String));
-    expect(response.body[0]).toHaveProperty("role", expect.any());
+    expect(response.body[0]).toHaveProperty("role");
     expect(response.body[0]).toHaveProperty("address", expect.any(String));
 
     tempId = response.body[0]._id;
