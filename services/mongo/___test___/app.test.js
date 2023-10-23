@@ -12,6 +12,8 @@ const app = require("../app");
 const User = require("../models/user");
 const { connectTest, client, getDbTest } = require("../config/mongo");
 const { signToken } = require("../helpers/jwt");
+const Review = require("../models/review");
+const Project = require("../models/project");
 
 let user;
 let access_token;
@@ -23,6 +25,7 @@ let projectId;
 beforeEach(async () => {
   try {
     await connectTest();
+    jest.restoreAllMocks();
     user = await User.findBy({ email: "najmi@mail.com" });
     access_token = signToken({ id: user._id });
   } catch (error) {
@@ -46,6 +49,15 @@ describe("root with endpoint / ", () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
+
+  // it("should respon 500 and body message", async () => {
+  //   jest.spyOn().mockRejectedValue("Error");
+  //   const response = await request(app)
+  //     .get("/")
+
+  //   expect(response.status).toBe(500);
+  //   expect(response.body).toHaveProperty("message", expect.any(String));
+  // });
 });
 
 describe("Register user with endpoint /register", () => {
@@ -131,7 +143,43 @@ describe("Register user with endpoint /register", () => {
       email: "najmi@mail.com",
       password: "12345",
       phoneNumber: "082368273623",
-      address: "Punteun",
+      address: "jawa barat",
+    });
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("Register with email format 400", async () => {
+    const response = await request(app).post("/register").send({
+      username: "najmi",
+      email: "najmi.com",
+      password: "12345",
+      phoneNumber: "082368273623",
+      address: "jawa barat",
+    });
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("Register with address not in list 400", async () => {
+    const response = await request(app).post("/register").send({
+      username: "najmi",
+      email: "najmi@mail.com",
+      password: "12345",
+      phoneNumber: "082368273623",
+      address: "amerika",
+    });
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("Register with phone length !== 12 400", async () => {
+    const response = await request(app).post("/register").send({
+      username: "najmi",
+      email: "najmi@mail.com",
+      password: "12345",
+      phoneNumber: "08236827",
+      address: "jawa barat",
     });
     expect(response.status).toBe(400);
     expect(response.body).toHaveProperty("message", expect.any(String));
@@ -192,6 +240,9 @@ describe("Login user with endpoint /login", () => {
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
 });
+
+// describe("Google login with endpoint /google-login", () => {
+// });
 
 describe("User with endpoint /users", () => {
   it("should respon 200 update role user and body message", async () => {
@@ -262,6 +313,16 @@ describe("User with endpoint /users", () => {
     expect(response.body[0]).toHaveProperty("address", expect.any(String));
 
     tempId = response.body[0]._id;
+  });
+
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(User, "findAll").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/users")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
   it("should respon 200 user by id and body message", async () => {
@@ -373,6 +434,71 @@ describe("User with endpoint /users", () => {
     expect(response.status).toBe(400);
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
+});
+
+describe("User with endpoint /student_profile", () => {
+  it("should respon 200 user find all and body message", async () => {
+    const response = await request(app)
+      .get("/student_profile")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Object);
+
+    expect(response.body).toHaveProperty("_id", expect.any(String));
+    expect(response.body).toHaveProperty("username", expect.any(String));
+    expect(response.body).toHaveProperty("email", expect.any(String));
+    expect(response.body).toHaveProperty("phoneNumber", expect.any(String));
+    expect(response.body).toHaveProperty("role", expect.any(String));
+    expect(response.body).toHaveProperty("address", expect.any(String));
+  });
+
+  it("should respon 403 user not found and body message", async () => {
+    const response = await request(app)
+      .get("/student_profile")
+      .set("access_token", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1MzQwODM4ODU2YWQzZjdkNmNmZmRiZCIsImlhdCI6MTY5Nzk0NzM4MX0.9u2DZOrF6b-sMElXm7fQI0XG6s2Fnykqd0EsmIUUkRM");
+
+    expect(response.status).toBe(403);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  // belum selesai
+  // it("should respon 400 user not found and body message", async () => {
+  //   const response = await request(app)
+  //     .get("/student_profile")
+  //     .set("access_token", access_token_teacher);
+
+  //   expect(response.status).toBe(400);
+  //   expect(response.body).toHaveProperty("message", expect.any(String));
+  // });
+});
+
+describe("User with endpoint /student_profile", () => {
+  it("should respon 200 user find all and body message", async () => {
+    const response = await request(app)
+      .get("/buddy_profile")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Object);
+
+    expect(response.body).toHaveProperty("_id", expect.any(String));
+    expect(response.body).toHaveProperty("username", expect.any(String));
+    expect(response.body).toHaveProperty("email", expect.any(String));
+    expect(response.body).toHaveProperty("phoneNumber", expect.any(String));
+    expect(response.body).toHaveProperty("role", expect.any(String));
+    expect(response.body).toHaveProperty("address", expect.any(String));
+  });
+
+  // belum selesai
+  // it("should respon 400 user not found and body message", async () => {
+  //   const response = await request(app)
+  //     .get("/buddy_profile")
+  //     .set("access_token", access_token_teacher);
+
+  //   expect(response.status).toBe(400);
+  //   expect(response.body).toHaveProperty("message", expect.any(String));
+  // });
 });
 
 describe("Category with endpoint /categories", () => {
@@ -508,6 +634,16 @@ describe("Project with endpoint /project", () => {
     expect(response.body[0]).toHaveProperty("published", expect.any(Boolean));
     expect(response.body[0]).toHaveProperty("goals", expect.any(String));
     expect(response.body[0]).toHaveProperty("feedback");
+  });
+
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(Project, "findAll").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/projects")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
   it("should respon 200 project get by id and body message", async () => {
@@ -693,9 +829,47 @@ describe("Project with endpoint /project", () => {
       })
       .set("access_token", access_token);
 
-    console.log(response.body, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
     expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 400 update project without name and body message", async () => {
+    const response = await request(app)
+      .put(`/projects/${tempId}`)
+      .send({
+        description: "testing update desc",
+        categoryId: categoriesId,
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 400 update project without description and body message", async () => {
+    const response = await request(app)
+      .put(`/projects/${tempId}`)
+      .send({
+        name: 'testing update',
+        categoryId: categoriesId,
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 400 update project without description and body message", async () => {
+    const response = await request(app)
+      .put(`/projects/${tempId}`)
+      .send({
+        name: 'testing update',
+        description: 'testing update'
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(400);
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
@@ -778,6 +952,16 @@ describe("Reviews with endpoint /reviews", () => {
     expect(response.body[0]).toHaveProperty("projectId", expect.any(String));
   });
 
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(Review, "findAll").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/reviews")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
   it("should respon 200 update review and body message", async () => {
     const response = await request(app)
       .put(`/reviews/${tempId}`)
@@ -857,7 +1041,7 @@ describe("Rating with endpoint /rating", () => {
       .send({
         rating: 4,
         studentId: studentId,
-        projectId: teacherId,
+        projectId: projectId
       })
       .set("access_token", access_token_teacher);
 
@@ -871,8 +1055,8 @@ describe("Rating with endpoint /rating", () => {
       .post("/ratings/buddy")
       .send({
         rating: 3,
-        studentId: studentId,
-        projectId: teacherId,
+        teacherId: teacherId,
+        projectId: projectId
       })
       .set("access_token", access_token);
 
