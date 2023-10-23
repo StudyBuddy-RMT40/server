@@ -51,7 +51,11 @@ router.get("/ratings", Controller.getRating);
 router.put("/ratings/:id", Controller.updateRating);
 
 // tambahin di tdd + authorize
-router.post("/ratings/student", authorizationBuddy, Controller.addRatingStudent);
+router.post(
+  "/ratings/student",
+  authorizationBuddy,
+  Controller.addRatingStudent
+);
 router.post("/ratings/buddy", authorizationStudent, Controller.addRatingBuddy);
 
 router.get("/categories", Controller.getCategories);
@@ -74,7 +78,7 @@ router.put("/todos/:id", Controller.updateTodos);
 router.delete("/todos/:id", Controller.deleteTodos);
 
 // midtrans
-router.post('/generate-midtrans-token/:projectId', Controller.generateMidtrans)
+router.post("/generate-midtrans-token/:projectId", Controller.generateMidtrans);
 
 // tambahin tdd authorize user
 router.post(
@@ -87,5 +91,11 @@ router.post(
 //   upload.fields([{ name: "image" }, { name: "video" }]),
 //   Controller.updateMediaDocumentation
 // );
+
+// tambahin tdd authorize buddy
+router.post("/add_wallet", Controller.addWallet);
+router.get("/my_wallet", Controller.getAllWalletByUserId);
+router.patch("/finish_job/:projectId", Controller.changeStatusWalletToFinish);
+router.put("/withdraw_wallet/", Controller.withdrawWallet);
 
 module.exports = router;

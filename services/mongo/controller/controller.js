@@ -13,6 +13,7 @@ const Specialist = require("../models/specialist");
 const Like = require("../models/like");
 const midtransClient = require("midtrans-client");
 const Storage = require("../models/storage");
+const Wallet = require("../models/wallet");
 const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
@@ -565,7 +566,9 @@ class Controller {
         rating,
       });
 
-      res.status(201).json({ message: "Add rating success", id: studentRating.insertedId });
+      res
+        .status(201)
+        .json({ message: "Add rating success", id: studentRating.insertedId });
     } catch (err) {
       next(err);
     }
@@ -948,84 +951,87 @@ class Controller {
     }
   }
 
-  // static async updateMediaDocumentation(req, res, next) {
-  //   try {
-  //     const { projectId } = req.body;
+  static async addWallet(req, res, next) {
+    try {
+      let { amount, projectId, teacherId } = req.body;
+      if (!amount) {
+        return res.status(400).json("Amount is required");
+      }
+      amount = parseFloat(amount);
+      if (!Number(amount)) {
+        return res.status(400).json("Amount should be number");
+      }
+      let response = await Wallet.create({
+        amount,
+        teacherId: new ObjectId(teacherId),
+        status: "paid",
+      });
 
-  //     if (!projectId) {
-  //       return res.status(400).json("project id is empty");
-  //     }
+      res
+        .status(201)
+        .json({ message: "Add amount success", id: response.insertedId });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-  //     const existingDocument = await Storage.findById(projectId);
+  static async getAllWalletByUserId(req, res, next) {
+    try {
+      const { id } = req.user;
+      const wallets = await Wallet.getAllMyWallet(id);
 
-  //     if (!existingDocument) {
-  //       return res.status(404).json("Document not found");
-  //     }
+      res.status(200).json({ myWallet: wallets });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-  //     const imageFile =
-  //       req.files && req.files["image"] ? req.files["image"][0].buffer : null;
-  //     const videoFile =
-  //       req.files && req.files["video"] ? req.files["video"][0].buffer : null;
+  static async changeStatusWalletToFinish(req, res, next) {
+    try {
+      const { projectId } = req.params;
+      let status = "finished";
+      const updatedStatusWallet = await Wallet.findOneAndUpdateStatus(
+        projectId,
+        {
+          $set: { status },
+        }
+      );
+      if (!updatedStatusWallet) {
+        return res.status(404).json({ message: "data not found" });
+      }
+      res.status(200).json({ message: "status has changes to finish" });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-  //     const uploadOptions = { resource_type: "video" };
+  static async withdrawWallet(req, res, next) {
+    try {
+      const { id: teacherId } = req.user;
 
-  //     let tempImageUrl = existingDocument.imageUrl;
-  //     let tempVideoUrl = existingDocument.videoUrl;
+      const finishedWallets = await Wallet.getWalletsByStatus(
+        teacherId,
+        "finished"
+      );
 
-  //     if (imageFile) {
-  //       const imageResult = await new Promise((resolve, reject) => {
-  //         cloudinary.uploader
-  //           .upload_stream({}, (error, result) => {
-  //             if (error) {
-  //               reject(error);
-  //             } else {
-  //               resolve(result.secure_url);
-  //             }
-  //           })
-  //           .end(imageFile);
-  //       });
-  //       tempImageUrl = imageResult;
-  //     }
+      if (finishedWallets.length === 0) {
+        return res.status(404).json({ message: "No finished wallets found" });
+      }
+      
+      for (const e of finishedWallets) {
+        const response = await Wallet.findOneAndUpdateStatus(e._id, {
+          $set: { status: "withdraw", amount: 0 },
+        });
+        console.log(`Updated wallet: ${e._id}`, response);
+      }
 
-  //     if (videoFile) {
-  //       const videoResult = await new Promise((resolve, reject) => {
-  //         cloudinary.uploader
-  //           .upload_stream(uploadOptions, (error, result) => {
-  //             if (error) {
-  //               reject(error);
-  //             } else {
-  //               resolve(result.secure_url);
-  //             }
-  //           })
-  //           .end(videoFile);
-  //       });
-  //       tempVideoUrl = videoResult;
-  //     }
-
-  //     const updateObject = {
-  //       videoUrl: tempVideoUrl,
-  //       imageUrl: tempImageUrl,
-  //     };
-
-  //     const updatedDocument = await Storage.findOneAndUpdate(
-  //       projectId,
-  //       updateObject
-  //     );
-
-  //     if (updatedDocument) {
-  //       res.status(200).json({
-  //         message: "Your product has been updated",
-  //         imgUrl: tempImageUrl,
-  //         videoUrl: tempVideoUrl,
-  //       });
-  //     } else {
-  //       res.status(404).json({ error: "Document not found" });
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //     res.status(500).json({ error: "Internal Server Error" });
-  //   }
-  // }
+      res
+        .status(200)
+        .json({ message: "Amount has been withdrawn from finished wallets" });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = Controller;
