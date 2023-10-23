@@ -823,8 +823,14 @@ class Controller {
 
   static async generateMidtrans(req, res, next) {
     try {
-      const { projectId } = req.params;
-      const project = await Project.findByPk(projectId);
+
+      const { price } = req.body
+      if (!price) {
+        throw {name: 'empty_price'}
+      }
+
+      const {projectId} = req.params
+      const project = await Project.findByPk(projectId)
 
       if (
         project.status !== "submitted" &&
@@ -840,18 +846,18 @@ class Controller {
       });
 
       let parameter = {
-        transaction_details: {
-          order_id: "TRANSACTION_" + Math.floor(1000 + Math.random() * 2000),
-          gross_amount: 5000,
-        },
-        credit_card: {
-          secure: true,
-        },
-        customer_details: {
-          first_name: project.Student.username,
-          email: project.Student.email,
-          phone: project.Student.phoneNumber,
-        },
+          "transaction_details": {
+              "order_id": "TRANSACTION_" + Math.floor(1000 + Math.random() * 2000),
+              "gross_amount": Number(price)
+          },
+          "credit_card":{
+              "secure" : true
+          },
+          "customer_details": {
+              "first_name": project.Student.username,
+              "email": project.Student.email,
+              "phone": project.Student.phoneNumber
+          }
       };
 
       const midtransToken = await snap.createTransaction(parameter);
