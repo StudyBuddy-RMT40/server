@@ -16,6 +16,11 @@ const Review = require("../models/review");
 const Project = require("../models/project");
 const Rating = require("../models/rating");
 
+const fs = require("fs");
+const path = require("path");
+const imagePath = path.join(__dirname, "assets", "image_test.png");
+const videoPath = path.join(__dirname, "assets", "video_test.mp4");
+
 let user;
 let access_token;
 let categoriesId;
@@ -25,11 +30,10 @@ let access_token_teacher;
 let projectId;
 beforeEach(async () => {
   try {
-    await connectTest(async () => {
-      jest.restoreAllMocks();
-      user = await User.findBy({ email: "najmi@mail.com" });
-      access_token = signToken({ id: user._id });
-    });
+    await connectTest(async () => {});
+    await jest.restoreAllMocks();
+    user = await User.findBy({ email: "najmi@mail.com" });
+    access_token = signToken({ id: user._id });
   } catch (error) {
     console.log(error);
   }
@@ -1499,6 +1503,80 @@ describe("Wallet with endpoint /wallet", () => {
     );
   });
 });
+
 describe("mediaUrls with endpoint /upload_docs", () => {
-  it("should add a new mediaUrls", async () => {});
+  let tempProjectId = "";
+
+  it("should 201 add a new mediaUrls", async () => {
+    try {
+      const responseCreate = await request(app)
+        .post("/projects")
+        .send({
+          name: "Halo",
+          teacherId: teacherId, // Provide a valid teacherId
+          startDate: "2023-10-1",
+          endDate: "2023-10-10",
+          status: "submitted",
+          description: "Halo ini untuk test description",
+          likes: 10,
+          categoryId: categoriesId, // Provide a valid categoryId
+          published: false,
+          goals: "completed testing",
+          feedback: "nice testing",
+        })
+        .set("access_token", access_token);
+
+      tempProjectId = responseCreate.body.id;
+
+      const response = await request(app)
+        .post("/upload_docs")
+        .field("projectId", tempProjectId) // Provide the valid project ID
+        // .attach("image", fs.readFileSync(imagePath)) // Attach the image file
+        // .attach("video", fs.readFileSync(videoPath)) // Attach the video file
+        .set("access_token", access_token);
+
+      expect(response.statusCode).toBe(201);
+      expect(response.body).toHaveProperty(
+        "message",
+        "Your product has been added"
+      );
+      // expect(response.body).toHaveProperty("imgUrl");
+      // expect(response.body).toHaveProperty("videoUrl");
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  });
+
+  it("should 400 if project id is null", async () => {
+    try {
+      const response = await request(app)
+        .post("/upload_docs")
+        .set("access_token", access_token);
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body).toHaveProperty("message", "project id is empty");
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  });
+
+  it("should 400 if projectId has been added", async () => {
+    try {
+      const response = await request(app)
+        .post("/upload_docs")
+        .field("projectId", tempProjectId) // Provide a valid project ID
+        // .attach("image", "./assets/image_test.png") // Replace with the path to your image file
+        // .attach("video", "./assets/video_test.mp4") // Replace with the path to your video file
+        .set("access_token", access_token);
+        console.log(response,"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+        expect(response.statusCode).toBe(400);
+        expect(response.body).toHaveProperty("message", "already have image and video");
+        
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  });
 });

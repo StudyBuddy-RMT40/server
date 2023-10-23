@@ -18,7 +18,6 @@ class Wallet {
     });
     const wallets = await cursor.toArray();
 
-    console.log(wallets, "<<<<<<<<<<<<<<<<<< DATA WALLET COY");
     const totalWalletAmount = wallets.reduce(
       (total, wallet) => total + wallet.amount,
       0

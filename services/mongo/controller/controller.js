@@ -471,21 +471,21 @@ class Controller {
       if (!categoryId) {
         throw { name: "empty_categoryId/project" };
       }
-    
+
       const nameProject = await Project.findOneAndUpdate(id, {
         $set: { name },
       });
-    
+
       const descriptionProject = await Project.findOneAndUpdate(id, {
         $set: { description },
       });
-    
+
       const categoryIdProject = await Project.findOneAndUpdate(id, {
         $set: { categoryId },
       });
 
       if (!nameProject || !descriptionProject || !categoryIdProject) {
-        throw {name: 'empty_updated'}
+        throw { name: "empty_updated" };
       }
 
       res.status(200).json({ message: "update successfully" });
@@ -877,17 +877,6 @@ class Controller {
   static async addMediaDocumentation(req, res, next) {
     try {
       let { projectId } = req.body;
-
-      if (!projectId) {
-        return res.status(400).json("project id is empty");
-      }
-
-      let checkProject = await Storage.findById(projectId);
-
-      if (checkProject) {
-        return res.status(400).json("already have image and video");
-      }
-
       // Check if 'image' and 'video' files exist in req.files
       const imageFile =
         req.files && req.files["image"] ? req.files["image"][0].buffer : null; // Image buffer
@@ -896,6 +885,18 @@ class Controller {
 
       let tempImageUrl;
       let tempVideoUrl;
+
+      if (!projectId) {
+        return res.status(400).json({ message: "project id is empty" });
+      }
+
+      let checkProject = await Storage.findById(projectId);
+
+      if (checkProject) {
+        return res
+          .status(400)
+          .json({ message: "already have image and video" });
+      }
 
       if (imageFile) {
         const result = await new Promise((resolve, reject) => {
@@ -946,6 +947,7 @@ class Controller {
         videoUrl: tempVideoUrl,
       });
     } catch (error) {
+      console.log(error);
       res.status(500).json({ error: "Internal Server Error" });
     }
   }
@@ -1013,7 +1015,7 @@ class Controller {
         teacherId,
         "finished"
       );
-      
+
       if (finishedWallets.length === 0) {
         return res.status(404).json({ message: "No finished wallets found" });
       }
