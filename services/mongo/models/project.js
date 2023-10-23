@@ -43,7 +43,6 @@ class Project {
             localField: "categoryId",
             foreignField: "_id",
             as: "Category",
-            as: "Category",
           },
         },
         {
@@ -51,7 +50,6 @@ class Project {
             from: "users",
             localField: "teacherId",
             foreignField: "_id",
-            as: "Teacher",
             as: "Teacher",
           },
         },
@@ -73,6 +71,33 @@ class Project {
           $unwind: "$Student",
         },
         {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "projectId",
+            as: "Todos",
+          },
+        },
+        {
+          $lookup: {
+            from: "mediaUrls",
+            localField: "_id",
+            foreignField: "projectId",
+            as: "mediaUrls",
+          },
+        },
+        {
+          $lookup: {
+            from: "reviews",
+            localField: "_id",
+            foreignField: "projectId",
+            as: "reviews",
+          },
+        },
+        {
+          $unwind: "$mediaUrls",
+        },
+        {
           $project: {
             _id: 1,
             name: 1,
@@ -86,7 +111,6 @@ class Project {
             published: 1,
             goals: 1,
             feedback: 1,
-            Category: 1,
             Category: {
               _id: 1,
               name: 1,
@@ -107,14 +131,9 @@ class Project {
               role: 1,
               address: 1,
             },
-          },
-        },
-        {
-          $lookup: {
-            from: "todolists",
-            localField: "_id",
-            foreignField: "projectId",
-            as: "Todos",
+            Todos: 1,
+            mediaUrls: 1,
+            reviews: 1,
           },
         },
       ])
@@ -125,7 +144,8 @@ class Project {
 
   static async findAll() {
     const getProject = await this.projectCollection()
-      .aggregate([
+      .aggregate(
+      [
         {
           $lookup: {
             from: "categories",
@@ -206,10 +226,11 @@ class Project {
               address: 1,
             },
             Todos: 1,
-            Likes: { $size: "$Likes" }, 
+            Likes: { $size: "$Likes" },
           },
         },
-      ])
+      ]
+    )
       .toArray();
 
     return getProject;

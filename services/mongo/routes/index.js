@@ -1,10 +1,21 @@
 const Controller = require("../controller/controller");
+const Test = require("../controller/test");
 const authentication = require("../middlewares/authentication");
 const authorizationBuddy = require("../middlewares/authorization");
+const authorizationStudent = require("../middlewares/authorizationStudent");
+const upload = require("../middlewares/multer");
 
 const router = require("express").Router();
 
 router.get("/", Controller.home);
+// router.post(
+//   "/upload_docs",
+//   upload.fields([
+//     { name: "image", maxCount: 1 },
+//     { name: "video", maxCount: 1 },
+//   ]),
+//   Test.addDocs
+// );
 
 router.post("/register", Controller.register);
 router.post("/login", Controller.login);
@@ -40,8 +51,8 @@ router.get("/ratings", Controller.getRating);
 router.put("/ratings/:id", Controller.updateRating);
 
 // tambahin di tdd + authorize
-router.post("/ratings/student", Controller.addRatingStundent);
-router.post("/ratings/buddy", Controller.addRatingBuddy);
+router.post("/ratings/student", authorizationBuddy, Controller.addRatingStudent);
+router.post("/ratings/buddy", authorizationStudent, Controller.addRatingBuddy);
 
 router.get("/categories", Controller.getCategories);
 router.get("/categories/:name", Controller.getCategoriesByName);
@@ -61,5 +72,20 @@ router.get("/todos", Controller.getTodos);
 router.get("/todos/:id", Controller.getTodosById);
 router.put("/todos/:id", Controller.updateTodos);
 router.delete("/todos/:id", Controller.deleteTodos);
+
+// midtrans
+router.post('/generate-midtrans-token/:projectId', Controller.generateMidtrans)
+
+// tambahin tdd authorize user
+router.post(
+  "/upload_docs",
+  upload.fields([{ name: "image" }, { name: "video" }]),
+  Controller.addMediaDocumentation
+);
+// router.put(
+//   "/upload_docs",
+//   upload.fields([{ name: "image" }, { name: "video" }]),
+//   Controller.updateMediaDocumentation
+// );
 
 module.exports = router;
