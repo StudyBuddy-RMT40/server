@@ -15,9 +15,15 @@ const { signToken } = require("../helpers/jwt");
 const Review = require("../models/review");
 const Project = require("../models/project");
 const Rating = require("../models/rating");
+const Wallet = require("../models/wallet");
+const Like = require("../models/like");
+const Category = require("../models/category");
+const Specialist = require("../models/specialist");
+const TodoList = require("../models/todolist");
 
 const fs = require("fs");
 const path = require("path");
+const { ObjectId } = require("mongodb");
 const imagePath = path.join(__dirname, "assets", "image_test.png");
 const videoPath = path.join(__dirname, "assets", "video_test.mp4");
 
@@ -442,11 +448,13 @@ describe("User with endpoint /users", () => {
 });
 
 describe("User with endpoint /student_profile", () => {
+  let tempStudentId = "";
   it("should respon 200 user find all and body message", async () => {
     const response = await request(app)
       .get("/student_profile")
       .set("access_token", access_token);
 
+    tempStudentId = response.body._id;
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Object);
 
@@ -456,6 +464,58 @@ describe("User with endpoint /student_profile", () => {
     expect(response.body).toHaveProperty("phoneNumber", expect.any(String));
     expect(response.body).toHaveProperty("role", expect.any(String));
     expect(response.body).toHaveProperty("address", expect.any(String));
+  });
+
+  it("should null because dont have data project on student profile", async () => {
+    const user = await User.findDataProfileStudent(tempStudentId);
+    expect(user).toBe(null);
+  });
+
+  it("should return 4 after buudy add rating 4 to stundent", async () => {
+    const responseCreate = await request(app)
+      .post("/projects")
+      .send({
+        name: "Halo",
+        teacherId: teacherId, // Provide a valid teacherId
+        startDate: "2023-10-1",
+        endDate: "2023-10-10",
+        status: "submitted",
+        description: "Halo ini untuk test description",
+        likes: 10,
+        categoryId: "65353253f2b47d804e0ac5f9", // Provide a valid categoryId
+        published: false,
+        goals: "completed testing",
+        feedback: "nice testing",
+      })
+      .set("access_token", access_token);
+
+    const response = await request(app)
+      .post("/ratings/student")
+      .send({
+        rating: 4,
+        studentId: tempStudentId,
+        projectId: responseCreate.body.id,
+      })
+      .set("access_token", access_token_teacher);
+
+    const responseLike = await request(app)
+      .post("/likes")
+      .send({
+        projectId: responseCreate.body.id,
+      })
+      .set("access_token", access_token);
+
+    const user = await User.findDataProfileStudent(new ObjectId(tempStudentId));
+    console.log(user, "data userr niboyss");
+    expect(user.Ratings).toBe(4);
+    expect(user.Likes).toBe(1);
+
+    const responseDelete = await request(app)
+      .delete("/likes")
+      .send({
+        projectId: responseCreate.body.id,
+      })
+      .set("access_token", access_token);
   });
 
   it("should respon 403 user not found and body message", async () => {
@@ -491,12 +551,14 @@ describe("User with endpoint /student_profile", () => {
   // });
 });
 
-describe("User with endpoint /student_profile", () => {
+describe("User with endpoint /buddy_profile", () => {
+  let tempTeachertId = "";
   it("should respon 200 user find all and body message", async () => {
     const response = await request(app)
       .get("/buddy_profile")
-      .set("access_token", access_token);
+      .set("access_token", access_token_teacher);
 
+    tempTeachertId = response.body._id;
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Object);
 
@@ -518,15 +580,53 @@ describe("User with endpoint /student_profile", () => {
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
-  // belum selesai
-  // it("should respon 400 user not found and body message", async () => {
-  //   const response = await request(app)
-  //     .get("/buddy_profile")
-  //     .set("access_token", access_token_teacher);
+  it("should null because dont have data project on student profile", async () => {
+    const user = await User.findDataProfileTeacher(tempTeachertId);
+    expect(user).toBe(null);
+  });
+  it("should return 4.5 after Student add rating 4.5 to buddy", async () => {
+    const responseCreate = await request(app)
+      .post("/projects")
+      .send({
+        name: "Halo",
+        teacherId: teacherId, // Provide a valid teacherId
+        startDate: "2023-10-1",
+        endDate: "2023-10-10",
+        status: "submitted",
+        description: "Halo ini untuk test description",
+        likes: 10,
+        categoryId: "65353253f2b47d804e0ac5f9", // Provide a valid categoryId
+        published: false,
+        goals: "completed testing",
+        feedback: "nice testing",
+      })
+      .set("access_token", access_token);
 
-  //   expect(response.status).toBe(400);
-  //   expect(response.body).toHaveProperty("message", expect.any(String));
-  // });
+    const response = await request(app)
+      .post("/ratings/buddy")
+      .send({
+        rating: 4.5,
+        teacherId: tempTeachertId,
+        projectId: responseCreate.body.id,
+      })
+      .set("access_token", access_token);
+
+    const responseLike = await request(app)
+      .post("/likes")
+      .send({
+        projectId: responseCreate.body.id,
+      })
+      .set("access_token", access_token);
+
+    console.log(response, "DATA RATINGSSS ting ting");
+
+    const user = await User.findDataProfileTeacher(
+      new ObjectId(tempTeachertId)
+    );
+    console.log(user, "data userr niboyss");
+    expect(user.Ratings).toBe(4.5);
+    expect(user.Likes).toBe(1);
+  });
 });
 
 describe("Category with endpoint /categories", () => {
@@ -574,6 +674,38 @@ describe("Category with endpoint /categories", () => {
 
     expect(response.body[0]).toHaveProperty("_id", expect.any(String));
     expect(response.body[0]).toHaveProperty("name", expect.any(String));
+  });
+
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(Category, "findAll").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/categories")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 200 category get by name and body message", async () => {
+    const response = await request(app)
+      .get("/categories/testing category")
+      .set("access_token", access_token);
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Object);
+
+    expect(response.body).toHaveProperty("_id", expect.any(String));
+    expect(response.body).toHaveProperty("name", expect.any(String));
+    expect(response.body).toHaveProperty("specialists", expect.any(Array));
+  });
+
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(Category, "findByName").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/categories/testing category")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
   let idDeleteCat = "";
@@ -1210,6 +1342,28 @@ describe("Like with endpoint /like", () => {
     expect(response.body[0]).toHaveProperty("userId", expect.any(String));
   });
 
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(Like, "findAll").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/likes")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 403 delete like authorize and body message", async () => {
+    const response = await request(app)
+      .delete("/likes")
+      .send({
+        projectId: "65349a78b4daa9819b4c40b5",
+      })
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(403);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
   it("should respon 200 delete like and body message", async () => {
     const response = await request(app)
       .delete("/likes")
@@ -1252,6 +1406,16 @@ describe("todos with endpoint /todos", () => {
     expect(response.body[0]).toHaveProperty("isFinished", expect.any(Boolean));
 
     tempId = response.body[0]._id;
+  });
+
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(TodoList, "findAll").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/todos")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
   it("should respon 200 and body message", async () => {
@@ -1474,9 +1638,21 @@ describe("Wallet with endpoint /wallet", () => {
       .get(`/wallet/my_wallet`)
       .set("access_token", access_token_teacher);
 
+    console.log(response.body, ">>>");
     expect(response.statusCode).toBe(200);
     expect(response.body).toHaveProperty("myWallet", expect.any(Number));
   });
+
+  // belum selesai
+  // it("should respon 500 and body message", async () => {
+  //   jest.spyOn(Wallet, "getWalletsByStatus").mockRejectedValue("Error");
+  //   const response = await request(app)
+  //     .get("/wallet/my_wallet")
+  //     .set("access_token", access_token_teacher);
+
+  //   expect(response.status).toBe(500);
+  //   expect(response.body).toHaveProperty("message", expect.any(String));
+  // });
 
   it('should withdraw funds from "finished" wallets', async () => {
     const response = await request(app)
@@ -1495,7 +1671,6 @@ describe("Wallet with endpoint /wallet", () => {
       .put(`/wallet/withdraw_wallet`)
       .set("access_token", access_token_teacher);
 
-    console.log(response.body, "<<<<<<<<<<<<<<<<<<");
     expect(response.statusCode).toBe(404);
     expect(response.body).toHaveProperty(
       "message",
@@ -1504,9 +1679,108 @@ describe("Wallet with endpoint /wallet", () => {
   });
 });
 
+describe("specialist with endpoint /specialist", () => {
+  let tempId = "";
+  let tempId2 = "";
+  it("should respon 201 and body message", async () => {
+    const response = await request(app)
+      .post("/specialist")
+      .send({
+        specialist: [
+          {
+            categoryId: categoriesId,
+          },
+        ],
+      })
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(201);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+    tempId2 = response.body.id;
+  });
+
+  it("should respon 403 and body message", async () => {
+    const response = await request(app)
+      .post("/specialist")
+      .send({
+        specialist: [
+          {
+            categoryId: categoriesId,
+          },
+        ],
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(403);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 200 and body message", async () => {
+    const response = await request(app)
+      .get(`/specialist`)
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Array);
+
+    expect(response.body[0]).toHaveProperty("Category", expect.any(Array));
+    expect(response.body[0].Category[0]).toHaveProperty(
+      "_id",
+      expect.any(String)
+    );
+
+    tempId = response.body[0]._id;
+  });
+
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(Specialist, "findAll").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/specialist")
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 200 find by name and body message", async () => {
+    const response = await request(app)
+      .get(`/specialist/${tempId}`)
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Array);
+
+    expect(response.body[0]).toHaveProperty("Category", expect.any(Array));
+    expect(response.body[0].Category[0]).toHaveProperty(
+      "_id",
+      expect.any(String)
+    );
+  });
+
+  it("should respon 200 deleted specialist by id", async () => {
+    const response = await request(app)
+      .delete(`/specialist/${tempId}`)
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty(
+      "message",
+      "Successfully deleted specialist"
+    );
+  });
+
+  it("should respon 404 deleted specialist by id if not found", async () => {
+    const response = await request(app)
+      .delete(`/specialist/${tempId}`)
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(404);
+    expect(response.body).toHaveProperty("message", "Not Found");
+  });
+});
+
 describe("mediaUrls with endpoint /upload_docs", () => {
   let tempProjectId = "";
-
   it("should 201 add a new mediaUrls", async () => {
     try {
       const responseCreate = await request(app)
@@ -1557,7 +1831,6 @@ describe("mediaUrls with endpoint /upload_docs", () => {
       expect(response.statusCode).toBe(400);
       expect(response.body).toHaveProperty("message", "project id is empty");
     } catch (error) {
-      console.error(error);
       throw error;
     }
   });
@@ -1570,10 +1843,11 @@ describe("mediaUrls with endpoint /upload_docs", () => {
         // .attach("image", "./assets/image_test.png") // Replace with the path to your image file
         // .attach("video", "./assets/video_test.mp4") // Replace with the path to your video file
         .set("access_token", access_token);
-        console.log(response,"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-        expect(response.statusCode).toBe(400);
-        expect(response.body).toHaveProperty("message", "already have image and video");
-        
+      expect(response.statusCode).toBe(400);
+      expect(response.body).toHaveProperty(
+        "message",
+        "already have image and video"
+      );
     } catch (error) {
       console.error(error);
       throw error;

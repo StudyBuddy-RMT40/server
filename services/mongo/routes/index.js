@@ -66,7 +66,7 @@ router.delete("/categories/:id", Controller.deleteCategories);
 router.get("/specialist", Controller.getAllSpecialist);
 router.get("/specialist/:id", Controller.getSpecialistById);
 router.post("/specialist", authorizationBuddy, Controller.addSpecialist);
-// router.delete("/specialist/:id");
+router.delete("/specialist/:id",Controller.deleteSpecialistById);
 
 router.get("/likes", Controller.getAllLike);
 router.post("/likes", Controller.addLike);

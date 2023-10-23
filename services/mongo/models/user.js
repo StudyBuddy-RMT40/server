@@ -107,21 +107,17 @@ class User {
       ])
       .toArray();
 
-    console.log(resultRatings);
     const user = result[0];
     user.Likes = resultLike[0] ? resultLike[0].Likes : 0;
 
-    if (resultRatings.length > 0) {
-      const totalRatings = resultRatings.reduce(
-        (sum, rating) => sum + rating.rating,
-        0
-      );
-      const averageRating = totalRatings / resultRatings.length;
-      user.Ratings = +averageRating.toFixed(2);
-    } else {
-      user.Ratings = 0.0;
-    }
-
+    const totalRatings = resultRatings.reduce(
+      (sum, rating) => sum + rating.rating,
+      0
+    );
+    const averageRating = totalRatings
+      ? totalRatings / resultRatings.length
+      : 0.0;
+    user.Ratings = parseFloat(averageRating.toFixed(2));
     return user;
   }
 
@@ -183,20 +179,17 @@ class User {
       ])
       .toArray();
 
-    console.log(resultRatings);
     const user = result[0];
     user.Likes = resultLike[0] ? resultLike[0].Likes : 0;
 
-    if (resultRatings.length > 0) {
-      const totalRatings = resultRatings.reduce(
-        (sum, rating) => sum + rating.rating,
-        0
-      );
-      const averageRating = totalRatings / resultRatings.length;
-      user.Ratings = +averageRating.toFixed(2);
-    } else {
-      user.Ratings = 0.0;
-    }
+    const totalRatings = resultRatings.reduce(
+      (sum, rating) => sum + rating.rating,
+      0
+    );
+    const averageRating = totalRatings
+      ? totalRatings / resultRatings.length
+      : 0.0;
+    user.Ratings = parseFloat(averageRating.toFixed(2));
 
     return user;
   }

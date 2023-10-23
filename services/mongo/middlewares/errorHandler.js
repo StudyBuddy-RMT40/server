@@ -111,7 +111,16 @@ const errorHandler = (err, req, res, next) => {
   } else if (err.name === "empty_updated") {
     status = 400;
     message = "Output updated is null";
-  }
+  } else if (err.name === "like_authorize") {
+    status = 403;
+    message = "Your not authorize to delete like";
+  } 
+  // else if (err.name === "specialist_notFound") {
+  //   status = 404;
+  //   message = "Specialist not found";
+  // }
+
+  
 
   res.status(status).json({ message });
 };

@@ -539,10 +539,17 @@ class Controller {
   static async addRatingStudent(req, res, next) {
     try {
       let { rating, studentId, projectId } = req.body;
-      if (!rating || !studentId || !projectId) {
-        return res
-          .status(400)
-          .json({ message: "rating studentId projectId is required" });
+
+      if (!rating) {
+        return res.status(400).json({ message: "Rating is required" });
+      }
+
+      if (!studentId) {
+        return res.status(400).json({ message: "Student ID is required" });
+      }
+
+      if (!projectId) {
+        return res.status(400).json({ message: "Project ID is required" });
       }
 
       rating = parseFloat(rating);
@@ -577,10 +584,16 @@ class Controller {
     try {
       let { rating, teacherId, projectId } = req.body;
 
-      if (!rating || !teacherId || !projectId) {
-        return res
-          .status(400)
-          .json({ message: "rating teacherId projectId is required" });
+      if (!rating) {
+        return res.status(400).json({ message: "Rating is required" });
+      }
+
+      if (!teacherId) {
+        return res.status(400).json({ message: "Student ID is required" });
+      }
+
+      if (!projectId) {
+        return res.status(400).json({ message: "Project ID is required" });
       }
 
       rating = parseFloat(rating);
@@ -720,6 +733,18 @@ class Controller {
     }
   }
 
+  static async deleteSpecialistById(req, res, next) {
+    try {
+      let { id } = req.params;
+      let response = await Specialist.delete(id);
+      if (response.deletedCount === 0) {
+        return res.status(404).json({ message: "Not Found" });
+      }
+      res.status(200).json({ message: "Successfully deleted specialist" });
+    } catch (error) {
+      next(error);
+    }
+  }
   static async getAllLike(req, res, next) {
     try {
       let likes = await Like.findAll();
@@ -760,8 +785,9 @@ class Controller {
       }
       let response = await Like.delete(id, projectId);
 
-      if (!response) {
-        throw res.status(403).json({ message: "authorize" });
+      console.log(response, ">>>");
+      if (response.deletedCount === 0) {
+        throw { name: "like_authorize" };
       }
 
       res.status(200).json({ message: "Your not love me anymore" });
