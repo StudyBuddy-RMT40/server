@@ -10,6 +10,13 @@ class Storage {
     const newMediaUrl = await this.storageCollection().insertOne(data);
     return newMediaUrl;
   }
+  
+  static async findById(id) {
+    const mediaUrl = await this.storageCollection().findOne({
+      projectId: new ObjectId(id),
+    });
+    return mediaUrl;
+  }
 }
 
 module.exports = Storage;

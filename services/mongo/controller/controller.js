@@ -471,21 +471,21 @@ class Controller {
       if (!categoryId) {
         throw { name: "empty_categoryId/project" };
       }
-    
+
       const nameProject = await Project.findOneAndUpdate(id, {
         $set: { name },
       });
-    
+
       const descriptionProject = await Project.findOneAndUpdate(id, {
         $set: { description },
       });
-    
+
       const categoryIdProject = await Project.findOneAndUpdate(id, {
         $set: { categoryId },
       });
 
       if (!nameProject || !descriptionProject || !categoryIdProject) {
-        throw {name: 'empty_updated'}
+        throw { name: "empty_updated" };
       }
 
       res.status(200).json({ message: "update successfully" });
@@ -539,10 +539,17 @@ class Controller {
   static async addRatingStudent(req, res, next) {
     try {
       let { rating, studentId, projectId } = req.body;
-      if (!rating || !studentId || !projectId) {
-        return res
-          .status(400)
-          .json({ message: "rating studentId projectId is required" });
+
+      if (!rating) {
+        return res.status(400).json({ message: "Rating is required" });
+      }
+
+      if (!studentId) {
+        return res.status(400).json({ message: "Student ID is required" });
+      }
+
+      if (!projectId) {
+        return res.status(400).json({ message: "Project ID is required" });
       }
 
       rating = parseFloat(rating);
@@ -577,10 +584,16 @@ class Controller {
     try {
       let { rating, teacherId, projectId } = req.body;
 
-      if (!rating || !teacherId || !projectId) {
-        return res
-          .status(400)
-          .json({ message: "rating teacherId projectId is required" });
+      if (!rating) {
+        return res.status(400).json({ message: "Rating is required" });
+      }
+
+      if (!teacherId) {
+        return res.status(400).json({ message: "Student ID is required" });
+      }
+
+      if (!projectId) {
+        return res.status(400).json({ message: "Project ID is required" });
       }
 
       rating = parseFloat(rating);
@@ -720,6 +733,18 @@ class Controller {
     }
   }
 
+  static async deleteSpecialistById(req, res, next) {
+    try {
+      let { id } = req.params;
+      let response = await Specialist.delete(id);
+      if (response.deletedCount === 0) {
+        return res.status(404).json({ message: "Not Found" });
+      }
+      res.status(200).json({ message: "Successfully deleted specialist" });
+    } catch (error) {
+      next(error);
+    }
+  }
   static async getAllLike(req, res, next) {
     try {
       let likes = await Like.findAll();
@@ -760,9 +785,9 @@ class Controller {
       }
       let response = await Like.delete(id, projectId);
 
-      console.log(response, '>>>')
+      console.log(response, ">>>");
       if (response.deletedCount === 0) {
-        throw {name: "like_authorize"}
+        throw { name: "like_authorize" };
       }
 
       res.status(200).json({ message: "Your not love me anymore" });
@@ -878,17 +903,6 @@ class Controller {
   static async addMediaDocumentation(req, res, next) {
     try {
       let { projectId } = req.body;
-
-      if (!projectId) {
-        return res.status(400).json("project id is empty");
-      }
-
-      let checkProject = await Storage.findById(projectId);
-
-      if (checkProject) {
-        return res.status(400).json("already have image and video");
-      }
-
       // Check if 'image' and 'video' files exist in req.files
       const imageFile =
         req.files && req.files["image"] ? req.files["image"][0].buffer : null; // Image buffer
@@ -897,6 +911,18 @@ class Controller {
 
       let tempImageUrl;
       let tempVideoUrl;
+
+      if (!projectId) {
+        return res.status(400).json({ message: "project id is empty" });
+      }
+
+      let checkProject = await Storage.findById(projectId);
+
+      if (checkProject) {
+        return res
+          .status(400)
+          .json({ message: "already have image and video" });
+      }
 
       if (imageFile) {
         const result = await new Promise((resolve, reject) => {
@@ -947,6 +973,7 @@ class Controller {
         videoUrl: tempVideoUrl,
       });
     } catch (error) {
+      console.log(error);
       res.status(500).json({ error: "Internal Server Error" });
     }
   }
@@ -1014,7 +1041,7 @@ class Controller {
         teacherId,
         "finished"
       );
-      
+
       if (finishedWallets.length === 0) {
         return res.status(404).json({ message: "No finished wallets found" });
       }
