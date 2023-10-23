@@ -114,7 +114,13 @@ const errorHandler = (err, req, res, next) => {
   } else if (err.name === "like_authorize") {
     status = 403;
     message = "Your not authorize to delete like";
-  }
+  } 
+  // else if (err.name === "specialist_notFound") {
+  //   status = 404;
+  //   message = "Specialist not found";
+  // }
+
+  
 
   res.status(status).json({ message });
 };
