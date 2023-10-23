@@ -2,6 +2,7 @@ const Controller = require("../controller/controller");
 const Test = require("../controller/test");
 const authentication = require("../middlewares/authentication");
 const authorizationBuddy = require("../middlewares/authorization");
+const authorizationStudent = require("../middlewares/authorizationStudent");
 const upload = require("../middlewares/multer");
 
 const router = require("express").Router();
@@ -50,8 +51,8 @@ router.get("/ratings", Controller.getRating);
 router.put("/ratings/:id", Controller.updateRating);
 
 // tambahin di tdd + authorize
-router.post("/ratings/student", Controller.addRatingStundent);
-router.post("/ratings/buddy", Controller.addRatingBuddy);
+router.post("/ratings/student", authorizationBuddy, Controller.addRatingStudent);
+router.post("/ratings/buddy", authorizationStudent, Controller.addRatingBuddy);
 
 router.get("/categories", Controller.getCategories);
 router.get("/categories/:name", Controller.getCategoriesByName);
@@ -71,6 +72,9 @@ router.get("/todos", Controller.getTodos);
 router.get("/todos/:id", Controller.getTodosById);
 router.put("/todos/:id", Controller.updateTodos);
 router.delete("/todos/:id", Controller.deleteTodos);
+
+// midtrans
+router.post('/generate-midtrans-token/:projectId', Controller.generateMidtrans)
 
 // tambahin tdd authorize user
 router.post(
