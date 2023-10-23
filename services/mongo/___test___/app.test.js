@@ -15,6 +15,8 @@ const { signToken } = require("../helpers/jwt");
 const Review = require("../models/review");
 const Project = require("../models/project");
 const Rating = require("../models/rating");
+const Wallet = require("../models/wallet");
+const Like = require("../models/like");
 
 let user;
 let access_token;
@@ -1206,6 +1208,28 @@ describe("Like with endpoint /like", () => {
     expect(response.body[0]).toHaveProperty("userId", expect.any(String));
   });
 
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(Like, "findAll").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/likes")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 403 delete like authorize and body message", async () => {
+    const response = await request(app)
+      .delete("/likes")
+      .send({
+        projectId: "65349a78b4daa9819b4c40b5",
+      })
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(403);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
   it("should respon 200 delete like and body message", async () => {
     const response = await request(app)
       .delete("/likes")
@@ -1470,9 +1494,21 @@ describe("Wallet with endpoint /wallet", () => {
       .get(`/wallet/my_wallet`)
       .set("access_token", access_token_teacher);
 
+      console.log(response.body, '>>>')
     expect(response.statusCode).toBe(200);
     expect(response.body).toHaveProperty("myWallet", expect.any(Number));
   });
+
+  // belum selesai
+  // it("should respon 500 and body message", async () => {
+  //   jest.spyOn(Wallet, "getWalletsByStatus").mockRejectedValue("Error");
+  //   const response = await request(app)
+  //     .get("/wallet/my_wallet")
+  //     .set("access_token", access_token_teacher);
+
+  //   expect(response.status).toBe(500);
+  //   expect(response.body).toHaveProperty("message", expect.any(String));
+  // });
 
   it('should withdraw funds from "finished" wallets', async () => {
     const response = await request(app)
