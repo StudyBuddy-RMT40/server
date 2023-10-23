@@ -1,5 +1,5 @@
 const Controller = require("../controller/controller");
-const Test = require("../controller/test");
+// const Test = require("../controller/test");
 const authentication = require("../middlewares/authentication");
 const authorizationBuddy = require("../middlewares/authorization");
 const authorizationStudent = require("../middlewares/authorizationStudent");
