@@ -559,13 +559,13 @@ class Controller {
         return res.status(403).json({ message: "already have rating" });
       }
 
-      await Rating.create({
+      let studentRating = await Rating.create({
         studentId: new ObjectId(studentId),
         projectId: new ObjectId(projectId),
         rating,
       });
 
-      res.status(201).json({ message: "Add rating success" });
+      res.status(201).json({ message: "Add rating success", id: studentRating.insertedId });
     } catch (err) {
       next(err);
     }

@@ -16,15 +16,17 @@ const { signToken } = require("../helpers/jwt");
 let user;
 let access_token;
 let categoriesId;
+let studentId;
 let teacherId;
 let access_token_teacher;
+let projectId;
 beforeEach(async () => {
   try {
     await connectTest();
     user = await User.findBy({ email: "najmi@mail.com" });
     access_token = signToken({ id: user._id });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
   }
 });
 
@@ -33,7 +35,7 @@ afterAll(async () => {
     // const a = await getDbTest().deleteMany({})
     await client.close();
   } catch (error) {
-    console.log(error);
+    // console.log(error);
   }
 });
 
@@ -207,7 +209,8 @@ describe("User with endpoint /users", () => {
       })
       .set("access_token", access_token_teacher);
 
-    teacherId = responseTeacher.body.id;
+      studentId = response.body.id
+      teacherId = responseTeacher.body.id
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("message", expect.any(String));
@@ -479,6 +482,7 @@ describe("Project with endpoint /project", () => {
       .set("access_token", access_token);
 
     tempId = response.body.id;
+    projectId = response.body.id;
 
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty("message", expect.any(String));
@@ -489,6 +493,7 @@ describe("Project with endpoint /project", () => {
       .get("/projects")
       .set("access_token", access_token);
 
+      console.log(response.body, '<>>><><')
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
 
@@ -506,9 +511,13 @@ describe("Project with endpoint /project", () => {
   });
 
   it("should respon 200 project get by id and body message", async () => {
+    console.log(tempId, '<<<')
+    
     const response = await request(app)
       .get(`/projects/${tempId}`)
       .set("access_token", access_token);
+
+    console.log(response.body, '>>>>> res')
 
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Object);
@@ -743,25 +752,8 @@ describe("Project with endpoint /project", () => {
 describe("Reviews with endpoint /reviews", () => {
   let tempId = "";
   it("should respon 201 and body message", async () => {
-    const responseProject = await request(app)
-      .post("/projects")
-      .send({
-        name: "Halo",
-        studentId: 1,
-        teacherId: 1,
-        startDate: "2023-10-1",
-        endDate: "2023-10-10",
-        isFinished: true,
-        description: "Halo ini untuk test description",
-        likes: 10,
-        CategoryId: 1,
-      })
-      .set("access_token", access_token);
-
-    tempIdProject = await responseProject.body.id;
-
     const response = await request(app)
-      .post(`/reviews/${tempIdProject}`)
+      .post(`/reviews/${projectId}`)
       .send({
         comment: "Comment user student/buddy",
       })
@@ -783,7 +775,7 @@ describe("Reviews with endpoint /reviews", () => {
     expect(response.body[0]).toHaveProperty("_id", expect.any(String));
     expect(response.body[0]).toHaveProperty("comment", expect.any(String));
     expect(response.body[0]).toHaveProperty("UserId", expect.any(String));
-    expect(response.body[0]).toHaveProperty("ProjectId", expect.any(String));
+    expect(response.body[0]).toHaveProperty("projectId", expect.any(String));
   });
 
   it("should respon 200 update review and body message", async () => {
@@ -852,22 +844,38 @@ describe("Reviews with endpoint /reviews", () => {
     expect(response.body).toHaveProperty("message", expect.any(String));
 
     await request(app)
-      .delete(`/projects/${tempIdProject}`)
+      .delete(`/projects/${projectId}`)
       .set("access_token", access_token);
   });
 });
 
 describe("Rating with endpoint /rating", () => {
   let tempId = "";
-  it("should respon 201 and body message", async () => {
+  it("should respon 201 student and body message", async () => {
     const response = await request(app)
-      .post("/ratings")
+      .post("/ratings/student")
       .send({
         rating: 4,
+        studentId: studentId,
+        projectId: teacherId
+      })
+      .set("access_token", access_token_teacher);
+
+    tempId = response.body.id;
+    expect(response.status).toBe(201);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 201 buddy and body message", async () => {
+    const response = await request(app)
+      .post("/ratings/buddy")
+      .send({
+        rating: 3,
+        studentId: studentId,
+        projectId: teacherId
       })
       .set("access_token", access_token);
 
-    tempId = response.body.id;
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
@@ -881,8 +889,9 @@ describe("Rating with endpoint /rating", () => {
     expect(response.body).toBeInstanceOf(Array);
 
     expect(response.body[0]).toHaveProperty("_id", expect.any(String));
-    expect(response.body[0]).toHaveProperty("UserId", expect.any(String));
     expect(response.body[0]).toHaveProperty("rating", expect.any(Number));
+    expect(response.body[0]).toHaveProperty("projectId", expect.any(String));
+    expect(response.body[0]).toHaveProperty("studentId", expect.any(String));
   });
 
   it("should respon 200 update rating and body message", async () => {
@@ -897,7 +906,19 @@ describe("Rating with endpoint /rating", () => {
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
-  it("should respon 400 update rating and body message", async () => {
+  it("should respon 400 update rating without rating and body message", async () => {
+    const response = await request(app)
+      .put(`/ratings/${tempId}`)
+      .send({
+        rating: "",
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 400 update rating bson error and body message", async () => {
     const response = await request(app)
       .put(`/ratings/${tempId}asd`)
       .send({
