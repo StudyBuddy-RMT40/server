@@ -17,6 +17,9 @@ const Project = require("../models/project");
 const Rating = require("../models/rating");
 const Wallet = require("../models/wallet");
 const Like = require("../models/like");
+const Category = require("../models/category");
+const Specialist = require("../models/specialist");
+const TodoList = require("../models/todolist");
 
 let user;
 let access_token;
@@ -28,10 +31,10 @@ let projectId;
 beforeEach(async () => {
   try {
     await connectTest(async () => {
-      jest.restoreAllMocks();
-      user = await User.findBy({ email: "najmi@mail.com" });
-      access_token = signToken({ id: user._id });
     });
+    await jest.restoreAllMocks();
+    user = await User.findBy({ email: "najmi@mail.com" });
+    access_token = signToken({ id: user._id });
   } catch (error) {
     console.log(error);
   }
@@ -572,6 +575,38 @@ describe("Category with endpoint /categories", () => {
 
     expect(response.body[0]).toHaveProperty("_id", expect.any(String));
     expect(response.body[0]).toHaveProperty("name", expect.any(String));
+  });
+
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(Category, "findAll").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/categories")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 200 category get by name and body message", async () => {
+    const response = await request(app)
+      .get("/categories/testing category")
+      .set("access_token", access_token);
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Object);
+
+    expect(response.body).toHaveProperty("_id", expect.any(String));
+    expect(response.body).toHaveProperty("name", expect.any(String));
+    expect(response.body).toHaveProperty("specialists", expect.any(Array));
+  });
+
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(Category, "findByName").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/categories/testing category")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
   let idDeleteCat = "";
@@ -1274,6 +1309,16 @@ describe("todos with endpoint /todos", () => {
     tempId = response.body[0]._id;
   });
 
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(TodoList, "findAll").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/todos")
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
   it("should respon 200 and body message", async () => {
     const response = await request(app)
       .get(`/todos/${tempId}`)
@@ -1535,6 +1580,83 @@ describe("Wallet with endpoint /wallet", () => {
     );
   });
 });
+
 describe("mediaUrls with endpoint /upload_docs", () => {
   it("should add a new mediaUrls", async () => {});
+});
+
+describe("specialist with endpoint /specialist", () => {
+  let tempId = "";
+  it("should respon 201 and body message", async () => {
+    const response = await request(app)
+      .post("/specialist")
+      .send({
+        specialist: [
+          {
+            categoryId: categoriesId
+          }
+        ]
+      })
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(201);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+    // tempId = response.body._id;
+  });
+
+  it("should respon 403 and body message", async () => {
+    const response = await request(app)
+      .post("/specialist")
+      .send({
+        specialist: [
+          {
+            categoryId: categoriesId
+          }
+        ]
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(403);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 200 and body message", async () => {
+    const response = await request(app)
+      .get(`/specialist`)
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Array);
+
+    expect(response.body[0]).toHaveProperty("Category", expect.any(Array));
+    expect(response.body[0].Category[0]).toHaveProperty("_id", expect.any(String));
+
+    tempId = response.body[0]._id
+  });
+
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(Specialist, "findAll").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/specialist")
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 200 find by name and body message", async () => {
+    console.log(tempId, '>>>')
+    const response = await request(app)
+      .get(`/specialist/${tempId}`)
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Array);
+
+    expect(response.body[0]).toHaveProperty("Category", expect.any(Array));
+    expect(response.body[0].Category[0]).toHaveProperty("_id", expect.any(String));
+  });
+  
+
+
 });
