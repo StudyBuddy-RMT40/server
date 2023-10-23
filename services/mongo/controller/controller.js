@@ -760,8 +760,9 @@ class Controller {
       }
       let response = await Like.delete(id, projectId);
 
-      if (!response) {
-        throw res.status(403).json({ message: "authorize" });
+      console.log(response, '>>>')
+      if (response.deletedCount === 0) {
+        throw {name: "like_authorize"}
       }
 
       res.status(200).json({ message: "Your not love me anymore" });
