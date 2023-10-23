@@ -499,7 +499,13 @@ class Controller {
       const { id } = req.params;
       const { status } = req.body;
 
-      const validStatusValues = ["accepted", "paid", "onProgress", "finished"];
+      const validStatusValues = [
+        "accepted",
+        "paid",
+        "onProgress",
+        "finished",
+        "archieved",
+      ];
 
       if (!status || !validStatusValues.includes(status)) {
         throw { name: "invalid_status/status" };
@@ -533,7 +539,6 @@ class Controller {
   static async addRatingStudent(req, res, next) {
     try {
       let { rating, studentId, projectId } = req.body;
-      console.log(req.body);
       if (!rating || !studentId || !projectId) {
         return res
           .status(400)
@@ -823,14 +828,13 @@ class Controller {
 
   static async generateMidtrans(req, res, next) {
     try {
-
-      const { price } = req.body
+      const { price } = req.body;
       if (!price) {
-        throw {name: 'empty_price'}
+        throw { name: "empty_price" };
       }
 
-      const {projectId} = req.params
-      const project = await Project.findByPk(projectId)
+      const { projectId } = req.params;
+      const project = await Project.findByPk(projectId);
 
       if (
         project.status !== "submitted" &&
@@ -846,18 +850,18 @@ class Controller {
       });
 
       let parameter = {
-          "transaction_details": {
-              "order_id": "TRANSACTION_" + Math.floor(1000 + Math.random() * 2000),
-              "gross_amount": Number(price)
-          },
-          "credit_card":{
-              "secure" : true
-          },
-          "customer_details": {
-              "first_name": project.Student.username,
-              "email": project.Student.email,
-              "phone": project.Student.phoneNumber
-          }
+        transaction_details: {
+          order_id: "TRANSACTION_" + Math.floor(1000 + Math.random() * 2000),
+          gross_amount: Number(price),
+        },
+        credit_card: {
+          secure: true,
+        },
+        customer_details: {
+          first_name: project.Student.username,
+          email: project.Student.email,
+          phone: project.Student.phoneNumber,
+        },
       };
 
       const midtransToken = await snap.createTransaction(parameter);
@@ -940,7 +944,6 @@ class Controller {
         videoUrl: tempVideoUrl,
       });
     } catch (error) {
-      console.log(error);
       res.status(500).json({ error: "Internal Server Error" });
     }
   }
