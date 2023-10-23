@@ -962,6 +962,7 @@ class Controller {
       }
       let response = await Wallet.create({
         amount,
+        projectId: new ObjectId(projectId),
         teacherId: new ObjectId(teacherId),
         status: "paid",
       });
@@ -978,7 +979,6 @@ class Controller {
     try {
       const { id } = req.user;
       const wallets = await Wallet.getAllMyWallet(id);
-
       res.status(200).json({ myWallet: wallets });
     } catch (error) {
       next(error);
@@ -995,10 +995,11 @@ class Controller {
           $set: { status },
         }
       );
+
       if (!updatedStatusWallet) {
         return res.status(404).json({ message: "data not found" });
       }
-      res.status(200).json({ message: "status has changes to finish" });
+      res.status(200).json({ message: "status has changed to finish" });
     } catch (error) {
       next(error);
     }
@@ -1012,13 +1013,13 @@ class Controller {
         teacherId,
         "finished"
       );
-
+      
       if (finishedWallets.length === 0) {
         return res.status(404).json({ message: "No finished wallets found" });
       }
-      
+
       for (const e of finishedWallets) {
-        const response = await Wallet.findOneAndUpdateStatus(e._id, {
+        const response = await Wallet.findOneAndUpdate(e._id, {
           $set: { status: "withdraw", amount: 0 },
         });
         console.log(`Updated wallet: ${e._id}`, response);
