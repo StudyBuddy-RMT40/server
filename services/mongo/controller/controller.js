@@ -11,6 +11,14 @@ const { getDbSession } = require("../config/mongo");
 const TodoList = require("../models/todolist");
 const Specialist = require("../models/specialist");
 const Like = require("../models/like");
+const Storage = require("../models/storage");
+const cloudinary = require("cloudinary").v2;
+
+cloudinary.config({
+  cloud_name: "ddp528yjf",
+  api_key: "979463692446595",
+  api_secret: "fEKu7qz8PieEtuonw-3Bo3fyLkM",
+});
 
 class Controller {
   static async home(req, res, next) {
@@ -42,28 +50,26 @@ class Controller {
 
       // validation phone number length
       if (phoneNumber.length === 12) {
-        phoneNumber
-      } 
-      else {
-        throw {name: 'phone_length'}
+        phoneNumber;
+      } else {
+        throw { name: "phone_length" };
       }
 
       // validation email format
       function validateEmail(email) {
-        const emailRegex = /^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;      
+        const emailRegex = /^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;
         return emailRegex.test(email);
       }
 
       if (email) {
-        let cek_email = validateEmail(email)
+        let cek_email = validateEmail(email);
         if (cek_email === true) {
-          email = email
+          email = email;
+        } else {
+          throw { name: "email_format" };
         }
-        else {
-          throw {name: 'email_format'}
-        }
- }
-      
+      }
+
       // validate address
       let province_list = [
         "Aceh",
@@ -99,15 +105,18 @@ class Controller {
         "Papua Barat",
         "Sulawesi Barat",
         "Sumatera Barat",
-        "Daerah Istimewa Yogyakarta"]
+        "Daerah Istimewa Yogyakarta",
+      ];
 
-      let targetProvince = address
-      targetProvince = targetProvince.replace(/\b\w/g, match => match.toUpperCase());
-      
+      let targetProvince = address;
+      targetProvince = targetProvince.replace(/\b\w/g, (match) =>
+        match.toUpperCase()
+      );
+
       if (province_list.includes(targetProvince)) {
-        address = targetProvince
+        address = targetProvince;
       } else {
-        throw {name: 'address_not_in_list'}
+        throw { name: "address_not_in_list" };
       }
 
       const users = await User.findAll();
@@ -294,7 +303,7 @@ class Controller {
       const response = await Review.create({
         comment,
         UserId: req.user.id,
-        ProjectId: projectId,
+        projectId: new ObjectId(projectId),
       });
       res.status(201).json({
         message: "Review created successfully",
@@ -804,6 +813,163 @@ class Controller {
       next(error);
     }
   }
+
+  // media
+  static async addMediaDocumentation(req, res, next) {
+    try {
+      let { projectId } = req.body;
+
+      if (!projectId) {
+        return res.status(400).json("project id is empty");
+      }
+
+      let checkProject = await Storage.findById(projectId);
+
+      if (checkProject) {
+        return res.status(400).json("already have image and video");
+      }
+
+      // Check if 'image' and 'video' files exist in req.files
+      const imageFile =
+        req.files && req.files["image"] ? req.files["image"][0].buffer : null; // Image buffer
+      const videoFile =
+        req.files && req.files["video"] ? req.files["video"][0].buffer : null; // Video buffer
+
+      let tempImageUrl;
+      let tempVideoUrl;
+
+      if (imageFile) {
+        const result = await new Promise((resolve, reject) => {
+          cloudinary.uploader
+            .upload_stream(async (error, res) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve(res);
+              }
+            })
+            .end(imageFile);
+        });
+        tempImageUrl = await result.secure_url;
+      }
+
+      if (videoFile) {
+        const result = await new Promise((resolve, reject) => {
+          cloudinary.uploader
+            .upload_stream(
+              {
+                resource_type: "video",
+              },
+              async (error, res) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(res);
+                }
+              }
+            )
+            .end(videoFile);
+        });
+        tempVideoUrl = await result.secure_url;
+      }
+
+      let value = {
+        projectId: new ObjectId(projectId),
+        videoUrl: tempVideoUrl,
+        imageUrl: tempImageUrl,
+      };
+
+      await Storage.create(value);
+
+      res.status(201).json({
+        message: "Your product has been added",
+        imgUrl: tempImageUrl,
+        videoUrl: tempVideoUrl,
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+
+  // static async updateMediaDocumentation(req, res, next) {
+  //   try {
+  //     const { projectId } = req.body;
+
+  //     if (!projectId) {
+  //       return res.status(400).json("project id is empty");
+  //     }
+
+  //     const existingDocument = await Storage.findById(projectId);
+
+  //     if (!existingDocument) {
+  //       return res.status(404).json("Document not found");
+  //     }
+
+  //     const imageFile =
+  //       req.files && req.files["image"] ? req.files["image"][0].buffer : null;
+  //     const videoFile =
+  //       req.files && req.files["video"] ? req.files["video"][0].buffer : null;
+
+  //     const uploadOptions = { resource_type: "video" };
+
+  //     let tempImageUrl = existingDocument.imageUrl;
+  //     let tempVideoUrl = existingDocument.videoUrl;
+
+  //     if (imageFile) {
+  //       const imageResult = await new Promise((resolve, reject) => {
+  //         cloudinary.uploader
+  //           .upload_stream({}, (error, result) => {
+  //             if (error) {
+  //               reject(error);
+  //             } else {
+  //               resolve(result.secure_url);
+  //             }
+  //           })
+  //           .end(imageFile);
+  //       });
+  //       tempImageUrl = imageResult;
+  //     }
+
+  //     if (videoFile) {
+  //       const videoResult = await new Promise((resolve, reject) => {
+  //         cloudinary.uploader
+  //           .upload_stream(uploadOptions, (error, result) => {
+  //             if (error) {
+  //               reject(error);
+  //             } else {
+  //               resolve(result.secure_url);
+  //             }
+  //           })
+  //           .end(videoFile);
+  //       });
+  //       tempVideoUrl = videoResult;
+  //     }
+
+  //     const updateObject = {
+  //       videoUrl: tempVideoUrl,
+  //       imageUrl: tempImageUrl,
+  //     };
+
+  //     const updatedDocument = await Storage.findOneAndUpdate(
+  //       projectId,
+  //       updateObject
+  //     );
+
+  //     if (updatedDocument) {
+  //       res.status(200).json({
+  //         message: "Your product has been updated",
+  //         imgUrl: tempImageUrl,
+  //         videoUrl: tempVideoUrl,
+  //       });
+  //     } else {
+  //       res.status(404).json({ error: "Document not found" });
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     res.status(500).json({ error: "Internal Server Error" });
+  //   }
+  // }
 }
 
 module.exports = Controller;

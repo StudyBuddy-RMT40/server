@@ -1,10 +1,20 @@
 const Controller = require("../controller/controller");
+const Test = require("../controller/test");
 const authentication = require("../middlewares/authentication");
 const authorizationBuddy = require("../middlewares/authorization");
+const upload = require("../middlewares/multer");
 
 const router = require("express").Router();
 
 router.get("/", Controller.home);
+// router.post(
+//   "/upload_docs",
+//   upload.fields([
+//     { name: "image", maxCount: 1 },
+//     { name: "video", maxCount: 1 },
+//   ]),
+//   Test.addDocs
+// );
 
 router.post("/register", Controller.register);
 router.post("/login", Controller.login);
@@ -61,5 +71,17 @@ router.get("/todos", Controller.getTodos);
 router.get("/todos/:id", Controller.getTodosById);
 router.put("/todos/:id", Controller.updateTodos);
 router.delete("/todos/:id", Controller.deleteTodos);
+
+// tambahin tdd authorize user
+router.post(
+  "/upload_docs",
+  upload.fields([{ name: "image" }, { name: "video" }]),
+  Controller.addMediaDocumentation
+);
+// router.put(
+//   "/upload_docs",
+//   upload.fields([{ name: "image" }, { name: "video" }]),
+//   Controller.updateMediaDocumentation
+// );
 
 module.exports = router;
