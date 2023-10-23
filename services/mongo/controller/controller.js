@@ -207,7 +207,6 @@ class Controller {
     }
   }
 
-  // untuk keperluan testing
   static async getUserById(req, res, next) {
     try {
       const id = req.params;
@@ -448,7 +447,7 @@ class Controller {
   static async deleteProject(req, res, next) {
     try {
       const { id } = req.params;
-      let checkProject = await Project.findByPk(id);
+      let checkProject = await Project.findBy(id);
       if (!checkProject) {
         throw { name: "not_found/project" };
       }
@@ -472,24 +471,24 @@ class Controller {
       if (!categoryId) {
         throw { name: "empty_categoryId/project" };
       }
-      if (name) {
-        const nameProject = await Project.findOneAndUpdate(id, {
-          $set: { name },
-        });
-        res.status(200).json({ message: "Name updated successfully" });
+    
+      const nameProject = await Project.findOneAndUpdate(id, {
+        $set: { name },
+      });
+    
+      const descriptionProject = await Project.findOneAndUpdate(id, {
+        $set: { description },
+      });
+    
+      const categoryIdProject = await Project.findOneAndUpdate(id, {
+        $set: { categoryId },
+      });
+
+      if (!nameProject || !descriptionProject || !categoryIdProject) {
+        throw {name: 'empty_updated'}
       }
-      if (description) {
-        const descriptionProject = await Project.findOneAndUpdate(id, {
-          $set: { description },
-        });
-        res.status(200).json({ message: "Description updated successfully" });
-      }
-      if (categoryId) {
-        const categoryIdProject = await Project.findOneAndUpdate(id, {
-          $set: { categoryId },
-        });
-        res.status(200).json({ message: "Category id updated successfully" });
-      }
+
+      res.status(200).json({ message: "update successfully" });
     } catch (err) {
       next(err);
     }

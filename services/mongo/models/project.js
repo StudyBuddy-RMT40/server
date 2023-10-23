@@ -230,6 +230,14 @@ class Project {
 
     return getProject;
   }
+
+  static async findBy(id, projection) {
+    const user = await this.projectCollection().findOne(
+      { _id: new ObjectId(id) },
+      projection
+    );
+    return user;
+  }
 }
 
 module.exports = Project;
