@@ -209,8 +209,8 @@ describe("User with endpoint /users", () => {
       })
       .set("access_token", access_token_teacher);
 
-      studentId = response.body.id
-      teacherId = responseTeacher.body.id
+    studentId = response.body.id;
+    teacherId = responseTeacher.body.id;
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("message", expect.any(String));
@@ -493,7 +493,7 @@ describe("Project with endpoint /project", () => {
       .get("/projects")
       .set("access_token", access_token);
 
-      console.log(response.body, '<>>><><')
+    console.log(response.body, "<>>><><");
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
 
@@ -511,13 +511,13 @@ describe("Project with endpoint /project", () => {
   });
 
   it("should respon 200 project get by id and body message", async () => {
-    console.log(tempId, '<<<')
-    
+    console.log(tempId, "<<<");
+
     const response = await request(app)
       .get(`/projects/${tempId}`)
       .set("access_token", access_token);
 
-    console.log(response.body, '>>>>> res')
+    console.log(response.body, ">>>>> res");
 
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Object);
@@ -857,7 +857,7 @@ describe("Rating with endpoint /rating", () => {
       .send({
         rating: 4,
         studentId: studentId,
-        projectId: teacherId
+        projectId: teacherId,
       })
       .set("access_token", access_token_teacher);
 
@@ -872,7 +872,7 @@ describe("Rating with endpoint /rating", () => {
       .send({
         rating: 3,
         studentId: studentId,
-        projectId: teacherId
+        projectId: teacherId,
       })
       .set("access_token", access_token);
 
@@ -1171,5 +1171,94 @@ describe("Authentication with endpoint /users and /project", () => {
 
     expect(response.status).toBe(403);
     expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+});
+
+describe("Wallet with endpoint /wallet", () => {
+  let tempId = "";
+  let tempProjectId = "";
+  it("should add a new wallet", async () => {
+    const responseCreate = await request(app)
+      .post("/projects")
+      .send({
+        name: "Halo",
+        // studentId: ,
+        teacherId: teacherId,
+        startDate: "2023-10-1",
+        endDate: "2023-10-10",
+        status: "submitted",
+        description: "Halo ini untuk test description",
+        likes: 10,
+        categoryId: categoriesId,
+        published: false,
+        goals: "completed testing",
+        feedback: "nice testing",
+      })
+      .set("access_token", access_token);
+
+    tempProjectId = await responseCreate.body.id;
+
+    const response = await request(app)
+      .post("/wallet/add_wallet")
+      .send({
+        amount: 1000,
+        projectId: tempProjectId,
+        teacherId: teacherId,
+      })
+      .set("access_token", access_token_teacher);
+
+    expect(response.statusCode).toBe(201);
+    expect(response.body).toHaveProperty("message", "Add amount success");
+    expect(response.body).toHaveProperty("id");
+    tempId = response.body.id;
+  });
+
+  it('should change wallet status to "finished"', async () => {
+    const response = await request(app)
+      .patch(`/wallet/finish_job/${tempProjectId}`)
+      .send({
+        status: "finished",
+      })
+      .set("access_token", access_token_teacher);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty(
+      "message",
+      "status has changed to finish"
+    );
+  });
+
+  it("should get all wallets for a user with status 'finished", async () => {
+    const response = await request(app)
+      .get(`/wallet/my_wallet`)
+      .set("access_token", access_token_teacher);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty("myWallet", expect.any(Number));
+  });
+
+  it('should withdraw funds from "finished" wallets', async () => {
+    const response = await request(app)
+      .put(`/wallet/withdraw_wallet`)
+      .set("access_token", access_token_teacher);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty(
+      "message",
+      "Amount has been withdrawn from finished wallets"
+    );
+  });
+
+  it('should 404 withdraw if not founds status "finished" data wallets', async () => {
+    const response = await request(app)
+      .put(`/wallet/withdraw_wallet`)
+      .set("access_token", access_token_teacher);
+
+    console.log(response.body, "<<<<<<<<<<<<<<<<<<");
+    expect(response.statusCode).toBe(404);
+    expect(response.body).toHaveProperty(
+      "message",
+      "No finished wallets found"
+    );
   });
 });

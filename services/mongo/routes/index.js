@@ -93,9 +93,9 @@ router.post(
 // );
 
 // tambahin tdd authorize buddy
-router.post("/add_wallet", Controller.addWallet);
-router.get("/my_wallet", Controller.getAllWalletByUserId);
-router.patch("/finish_job/:projectId", Controller.changeStatusWalletToFinish);
-router.put("/withdraw_wallet/", Controller.withdrawWallet);
+router.post("/wallet/add_wallet", Controller.addWallet);
+router.get("/wallet/my_wallet", Controller.getAllWalletByUserId);
+router.patch("/wallet/finish_job/:projectId", Controller.changeStatusWalletToFinish);
+router.put("/wallet/withdraw_wallet/", Controller.withdrawWallet);
 
 module.exports = router;
