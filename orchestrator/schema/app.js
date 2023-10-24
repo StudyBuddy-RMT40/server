@@ -35,6 +35,12 @@ const typeDefs = `#graphql
         address: String
     }
 
+    type Rating {
+        _id: ID
+        userId: ID
+        rating: Int
+    }
+
     type Project {
         _id: ID
         name: String
@@ -73,6 +79,13 @@ const typeDefs = `#graphql
         isFinished: Boolean
     }
 
+    type Review {
+        _id: ID
+        projectId: ID
+        userId: ID
+        comment: String
+    }
+
     type AccessToken {
         access_token: String
     }
@@ -103,6 +116,8 @@ const typeDefs = `#graphql
         getUser(id: ID): User
         getProjects: [Project]
         getProject(id: ID): Project
+        getReviews: [Review]
+        getRatings: [Rating]
     }
 
     type Mutation {
@@ -114,6 +129,10 @@ const typeDefs = `#graphql
         deleteProject(id: ID): Message
         putProject(id: ID, project: ProjectInput): Message
         patchProject(id: ID, project: ProjectInput): Message
+        addReview(projectId: ID, comment: String): Message
+        deleteReview(id: ID): Message
+        putReview(id: ID, comment: String): Message
+        putRating(id: ID, rating: Int): Message
     }
 
 `
@@ -196,7 +215,45 @@ const resolvers = {
                 }
                 return project
             } catch (err) {
-                throw err
+                throw err.response.data
+            }
+        },
+        getReviews: async () => {
+            try {
+                let reviews = await redis.get("reviews")
+                if (!reviews) {
+                    const { data } = await axios(`${BASE_URL}/reviews`, {
+                        headers: {
+                            access_token
+                        }
+                    })
+                    reviews = data
+                    await redis.set('reviews', JSON.stringify(data))
+                } else {
+                    reviews = JSON.parse(reviews)
+                }
+                return reviews
+            } catch (err) {
+                throw err.response.data
+            }
+        },
+        getRatings: async () => {
+            try {
+                let ratings = await redis.get('ratings')
+                if (!ratings) {
+                    const { data } = await axios(`${BASE_URL}/ratings`, {
+                        headers: {
+                            access_token
+                        }
+                    })
+                    ratings = data
+                    await redis.set("ratings", JSON.stringify(data))
+                } else {
+                    ratings = JSON.parse(ratings)
+                }
+                return ratings
+            } catch (err) {
+                throw err.response.data
             }
         }
     },
@@ -304,6 +361,64 @@ const resolvers = {
                 })
                 await redis.del('projects')
                 await redis.del(`project:${id}`)
+                return data
+            } catch (err) {
+                throw err.response.data
+            }
+        },
+        addReview: async (_, args) => {
+            try {
+                const { projectId, comment } = args
+                const { data } = await axios.post(`${BASE_URL}/reviews/${projectId}`, { comment }, {
+                    headers: {
+                        access_token
+                    }
+                })
+                await redis.del('reviews')
+                return data
+            } catch (err) {
+                throw err.response.data
+            }
+        },
+        deleteReview: async (_, args) => {
+            try {
+                const { id } = args
+                const { data } = await axios.delete(`${BASE_URL}/reviews/${id}`, {
+                    headers: {
+                        access_token
+                    }
+                })
+                await redis.del("reviews")
+                await redis.del(`review:${id}`)
+                return data
+            } catch (err) {
+                throw err.response.data
+            }
+        },
+        putReview: async (_, args) => {
+            try {
+                const { id, comment } = args
+                const { data } = await axios.put(`${BASE_URL}/reviews/${id}`, { comment }, {
+                    headers: {
+                        access_token
+                    }
+                })
+                await redis.del("reviews")
+                await redis.del(`review:${id}`)
+                return data
+            } catch (err) {
+                throw err.reponse.data
+            }
+        },
+        putRating: async (_, args) => {
+            try {
+                const { id, rating } = args
+                const { data } = await axios.put(`${BASE_URL}/ratings/${id}`, { rating }, {
+                    headers: {
+                        access_token
+                    }
+                })
+                await redis.del("ratings")
                 return data
             } catch (err) {
                 throw err.response.data

@@ -12,7 +12,7 @@ const dataToSeed = [
     password: "12345",
     role: "student",
     phoneNumber: "088812341234",
-    address: "jalan mawar",
+    address: "Jawa Barat",
   },
   {
     username: "joni",
@@ -20,19 +20,19 @@ const dataToSeed = [
     password: "12345",
     role: "buddy",
     phoneNumber: "088845674567",
-    address: "jalan melati",
+    address: "Aceh",
   },
 ];
 
 async function seedData() {
-  const db = client.db(dbName); 
+  const db = client.db(dbName);
   const collection = db.collection("users");
 
   try {
 
     dataToSeed.map(el => {
-        el.password = hashPassword(el.password)
-        return el
+      el.password = hashPassword(el.password)
+      return el
     })
 
     const result = await collection.insertMany(dataToSeed);

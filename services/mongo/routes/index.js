@@ -82,9 +82,9 @@ router.post("/generate-midtrans-token/:projectId", Controller.generateMidtrans);
 
 // tambahin tdd authorize user
 router.post(
-  "/upload_docs",
-  upload.fields([{ name: "image" }, { name: "video" }]),
-  Controller.addMediaDocumentation
+    "/upload_docs",
+    upload.fields([{ name: "image" }, { name: "video" }]),
+    Controller.addMediaDocumentation
 );
 // router.put(
 //   "/upload_docs",
