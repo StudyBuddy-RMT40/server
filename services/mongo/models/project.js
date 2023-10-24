@@ -29,6 +29,18 @@ class Project {
     return updatedProject;
   }
 
+  static calculateAverageRating(ratings) {
+    if (ratings.length === 0) {
+      return 0.0; // Default value when there are no ratings
+    }
+
+    const totalRatings = ratings.reduce(
+      (sum, rating) => sum + rating.rating,
+      0
+    );
+    return parseFloat((totalRatings / ratings.length).toFixed(1)); // Adjust the precision to one decimal place
+  }
+
   static async findByPk(id) {
     const query = { _id: new ObjectId(id) };
 
@@ -103,7 +115,6 @@ class Project {
             startDate: 1,
             endDate: 1,
             status: 1,
-            likes: 1,
             description: 1,
             published: 1,
             goals: 1,
@@ -136,7 +147,31 @@ class Project {
       ])
       .toArray();
 
-    return projectById[0];
+    if (projectById.length === 0) {
+      return null;
+    }
+
+    // Calculate likes for the project
+    const project = projectById[0];
+    project.likes = await getDb()
+      .collection("likes")
+      .countDocuments({ projectId: project._id });
+
+    // Calculate average rating for Teacher
+    const teacherRatings = await getDb()
+      .collection("ratings")
+      .find({ projectId: project._id, teacherId: project.teacherId })
+      .toArray();
+    project.Teacher.rating = this.calculateAverageRating(teacherRatings);
+
+    // Calculate average rating for Student
+    const studentRatings = await getDb()
+      .collection("ratings")
+      .find({ projectId: project._id, studentId: project.studentId })
+      .toArray();
+    project.Student.rating = this.calculateAverageRating(studentRatings);
+
+    return project;
   }
 
   static async findAll() {
