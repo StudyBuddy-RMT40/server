@@ -23,14 +23,14 @@ cloudinary.config({
 });
 
 class Controller {
-  static async getLandingPage(req,res,next){
+  static async getLandingPage(req, res, next) {
     try {
-      let dataSlider = []
-      let top5 = []
-      
-      res.status({slider:dataSlider, top5:dataTop5})
+      let dataSlider = [];
+      let top5 = [];
+
+      res.status({ slider: dataSlider, top5: dataTop5 });
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   static async home(req, res, next) {
