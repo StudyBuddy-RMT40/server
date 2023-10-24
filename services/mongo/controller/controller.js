@@ -41,6 +41,65 @@ class Controller {
     }
   }
 
+  static async getLocation(req, res, next) {
+    try {
+      let province_list = [
+        "Aceh",
+        "Bali",
+        "Bangka Belitung",
+        "Banten",
+        "Bengkulu",
+        "Jawa Tengah",
+        "Kalimantan Tengah",
+        "Sulawesi Tengah",
+        "Jawa Timur",
+        "Kalimantan Timur",
+        "Nusa Tenggara Timur",
+        "Gorontalo",
+        "Daerah Khusus Ibukota Jakarta",
+        "Jambi",
+        "Lampung",
+        "Maluku",
+        "Kalimantan Utara",
+        "Maluku Utara",
+        "Sulawesi Utara",
+        "Sumatera Utara",
+        "Papua",
+        "Riau",
+        "Kepulauan Riau",
+        "Kalimantan Selatan",
+        "Sulawesi Selatan",
+        "Sumatera Selatan",
+        "Sulawesi Tenggara",
+        "Jawa Barat",
+        "Kalimantan Barat",
+        "Nusa Tenggara Barat",
+        "Papua Barat",
+        "Sulawesi Barat",
+        "Sumatera Barat",
+        "Daerah Istimewa Yogyakarta",
+      ];
+      res.status(200).json(province_list)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async getPubCategories(req, res, next) {
+    try {
+      let getCategories = await Category.findAll();
+
+      getCategories.map(el => {
+        delete el.groupBy
+        return el
+      })
+
+      res.status(200).json(getCategories);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async register(req, res, next) {
     try {
       let { username, email, password, phoneNumber, address } = req.body;
@@ -172,7 +231,7 @@ class Controller {
         throw { name: "invalid_email/password" };
       }
       const access_token = signToken({ id: findUser._id });
-      res.status(200).json({ access_token });
+      res.status(200).json({ access_token: access_token, role: findUser.role });
     } catch (err) {
       next(err);
     }
@@ -509,7 +568,7 @@ class Controller {
         "paid",
         "onProgress",
         "finished",
-        "archieved",
+        "toReview",
       ];
 
       if (!status || !validStatusValues.includes(status)) {

@@ -15,6 +15,12 @@ router.post("/login", Controller.login);
 router.post("/google-login", Controller.googleLogin);
 router.get("landing-page",Controller.getLandingPage)
 
+router.get('/pub/projects', Controller.getProject)
+router.get('/pub/projects/:id', Controller.getProjectbyId)
+router.get('/pub/locations', Controller.getLocation)
+router.get('/pub/categories', Controller.getPubCategories)
+
+
 router.use(authentication);
 
 // dijalankan setelah login
