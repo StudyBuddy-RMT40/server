@@ -41,6 +41,65 @@ class Controller {
     }
   }
 
+  static async getLocation(req, res, next) {
+    try {
+      let province_list = [
+        "Aceh",
+        "Bali",
+        "Bangka Belitung",
+        "Banten",
+        "Bengkulu",
+        "Jawa Tengah",
+        "Kalimantan Tengah",
+        "Sulawesi Tengah",
+        "Jawa Timur",
+        "Kalimantan Timur",
+        "Nusa Tenggara Timur",
+        "Gorontalo",
+        "Daerah Khusus Ibukota Jakarta",
+        "Jambi",
+        "Lampung",
+        "Maluku",
+        "Kalimantan Utara",
+        "Maluku Utara",
+        "Sulawesi Utara",
+        "Sumatera Utara",
+        "Papua",
+        "Riau",
+        "Kepulauan Riau",
+        "Kalimantan Selatan",
+        "Sulawesi Selatan",
+        "Sumatera Selatan",
+        "Sulawesi Tenggara",
+        "Jawa Barat",
+        "Kalimantan Barat",
+        "Nusa Tenggara Barat",
+        "Papua Barat",
+        "Sulawesi Barat",
+        "Sumatera Barat",
+        "Daerah Istimewa Yogyakarta",
+      ];
+      res.status(200).json(province_list)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async getPubCategories(req, res, next) {
+    try {
+      let getCategories = await Category.findAll();
+
+      getCategories.map(el => {
+        delete el.groupBy
+        return el
+      })
+
+      res.status(200).json(getCategories);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async register(req, res, next) {
     try {
       let { username, email, password, phoneNumber, address } = req.body;
@@ -509,7 +568,7 @@ class Controller {
         "paid",
         "onProgress",
         "finished",
-        "archieved",
+        "toReview",
       ];
 
       if (!status || !validStatusValues.includes(status)) {
@@ -870,8 +929,7 @@ class Controller {
       const project = await Project.findByPk(projectId);
 
       if (
-        project.status !== "submitted" &&
-        project.Students.role !== "student"
+        project.status !== "submitted"
       ) {
         throw { name: "cannot_access_payment" };
       }
@@ -978,8 +1036,9 @@ class Controller {
         videoUrl: tempVideoUrl,
       });
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ error: "Internal Server Error" });
+      // console.log(error);
+      next(error)
+      // res.status(500).json({ error: "Internal Server Error" });
     }
   }
 
@@ -987,11 +1046,11 @@ class Controller {
     try {
       let { amount, projectId, teacherId } = req.body;
       if (!amount) {
-        return res.status(400).json("Amount is required");
+        throw {name: 'Amount is required/wallet' }
       }
       amount = parseFloat(amount);
       if (!Number(amount)) {
-        return res.status(400).json("Amount should be number");
+        throw {name: 'Amount should be number' }
       }
       let response = await Wallet.create({
         amount,
@@ -1030,7 +1089,7 @@ class Controller {
       );
 
       if (!updatedStatusWallet) {
-        return res.status(404).json({ message: "data not found" });
+        throw {name: 'data not found/wallet'}
       }
       res.status(200).json({ message: "status has changed to finish" });
     } catch (error) {
@@ -1048,7 +1107,7 @@ class Controller {
       );
 
       if (finishedWallets.length === 0) {
-        return res.status(404).json({ message: "No finished wallets found" });
+        throw {name: 'No finished wallets found/wallet'}
       }
 
       for (const e of finishedWallets) {

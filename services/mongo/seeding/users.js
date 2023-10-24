@@ -22,6 +22,38 @@ const dataToSeed = [
     phoneNumber: "088845674567",
     address: "Aceh",
   },
+  {
+    username: "rini",
+    email: "rini@mail.com",
+    password: "12345",
+    role: "student",
+    phoneNumber: "088812341234",
+    address: "Jambi",
+  },
+  {
+    username: "amin",
+    email: "amin@mail.com",
+    password: "12345",
+    role: "buddy",
+    phoneNumber: "088845674567",
+    address: "Bengkulu",
+  },
+  {
+    username: "maruli",
+    email: "maruli@mail.com",
+    password: "12345",
+    role: "student",
+    phoneNumber: "088812341234",
+    address: "Riau",
+  },
+  {
+    username: "sri",
+    email: "sri@mail.com",
+    password: "12345",
+    role: "buddy",
+    phoneNumber: "088845674567",
+    address: "Jawa Tengah",
+  },
 ];
 
 async function seedData() {

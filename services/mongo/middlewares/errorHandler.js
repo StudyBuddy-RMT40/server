@@ -114,13 +114,22 @@ const errorHandler = (err, req, res, next) => {
   } else if (err.name === "like_authorize") {
     status = 403;
     message = "Your not authorize to delete like";
-  } 
-  // else if (err.name === "specialist_notFound") {
-  //   status = 404;
-  //   message = "Specialist not found";
-  // }
+  } else if (err.name === "Amount should be number") {
+    status = 400;
+    message = "Amount should be number";
+  } else if (err.name === "data not found/wallet") {
+    status = 404;
+    message = "Wallet data not found";
+  } else if (err.name === "No finished wallets found/wallet") {
+    status = 404;
+    message = "No finished wallets found";
+  } else if (err.name === "Amount is required/wallet") {
+    status = 400;
+    message = "Amount is required";
+  }
 
   
+
 
   res.status(status).json({ message });
 };

@@ -6,16 +6,12 @@ const dbName = "study_buddy";
 const testDbName = "study_buddy_test";
 
 let db = {};
-let dbTest = {};
+// let dbTest = {};
 
-const connect = async () => {
-  try {
-    await client.connect();
-    db = client.db(dbName);
-    return db;
-  } catch (err) {
-    console.log(err);
-  }
+const connect = async (databaseName) => {
+  await client.connect();
+  db = client.db(databaseName || dbName);
+  return db;
 };
 
 // config for test
@@ -29,15 +25,15 @@ const connect = async () => {
 //   }
 // };
 
-const connectTest = async (callback) => {
-  try {
-    await client.connect();
-    db = client.db(testDbName);
-    callback(); // Call the callback after successful connection
-  } catch (err) {
-    console.log(err);
-  }
-};
+// const connectTest = async (callback) => {
+//   try {
+//     await client.connect();
+//     db = client.db(testDbName);
+//     callback(); // Call the callback after successful connection
+//   } catch (err) {
+//     console.log(err);
+//   }
+// };
 
 const getDb = () => {
   return db;
@@ -47,16 +43,16 @@ const getDbSession = () => {
   return { db: client.db(dbName), session };
 };
 
-const getDbTest = () => {
-  return dbTest;
-};
+// const getDbTest = () => {
+//   return dbTest;
+// };
 
 module.exports = {
   connect,
-  connectTest,
+  // connectTest,
   getDb,
   client,
-  getDbTest,
+  // getDbTest,
   getDbSession,
-  db
+  // db
 };
