@@ -8,18 +8,12 @@ const upload = require("../middlewares/multer");
 const router = require("express").Router();
 
 router.get("/", Controller.home);
-// router.post(
-//   "/upload_docs",
-//   upload.fields([
-//     { name: "image", maxCount: 1 },
-//     { name: "video", maxCount: 1 },
-//   ]),
-//   Test.addDocs
-// );
+// router.post("/add-projectAi", Test.addProject);
 
 router.post("/register", Controller.register);
 router.post("/login", Controller.login);
 router.post("/google-login", Controller.googleLogin);
+router.get("landing-page",Controller.getLandingPage)
 
 router.use(authentication);
 
@@ -31,7 +25,6 @@ router.get("/users", Controller.getUser);
 router.get("/users/:id", Controller.getUserById);
 router.put("/users", Controller.updateUser);
 
-// tambahin di tdd untuk student & buddy
 router.get("/student_profile", Controller.getStudentProfile);
 router.get("/buddy_profile", Controller.getBuddyProfile);
 
@@ -66,7 +59,7 @@ router.delete("/categories/:id", Controller.deleteCategories);
 router.get("/specialist", Controller.getAllSpecialist);
 router.get("/specialist/:id", Controller.getSpecialistById);
 router.post("/specialist", authorizationBuddy, Controller.addSpecialist);
-router.delete("/specialist/:id",Controller.deleteSpecialistById);
+router.delete("/specialist/:id", Controller.deleteSpecialistById);
 
 router.get("/likes", Controller.getAllLike);
 router.post("/likes", Controller.addLike);
@@ -82,9 +75,9 @@ router.post("/generate-midtrans-token/:projectId", Controller.generateMidtrans);
 
 // tambahin tdd authorize user
 router.post(
-  "/upload_docs",
-  upload.fields([{ name: "image" }, { name: "video" }]),
-  Controller.addMediaDocumentation
+    "/upload_docs",
+    upload.fields([{ name: "image" }, { name: "video" }]),
+    Controller.addMediaDocumentation
 );
 // router.put(
 //   "/upload_docs",
@@ -95,7 +88,10 @@ router.post(
 // tambahin tdd authorize buddy
 router.post("/wallet/add_wallet", Controller.addWallet);
 router.get("/wallet/my_wallet", Controller.getAllWalletByUserId);
-router.patch("/wallet/finish_job/:projectId", Controller.changeStatusWalletToFinish);
+router.patch(
+  "/wallet/finish_job/:projectId",
+  Controller.changeStatusWalletToFinish
+);
 router.put("/wallet/withdraw_wallet/", Controller.withdrawWallet);
 
 module.exports = router;
