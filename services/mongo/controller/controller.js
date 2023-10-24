@@ -23,6 +23,16 @@ cloudinary.config({
 });
 
 class Controller {
+  static async getLandingPage(req,res,next){
+    try {
+      let dataSlider = []
+      let top5 = []
+      
+      res.status({slider:dataSlider, top5:dataTop5})
+    } catch (error) {
+      next(error)
+    }
+  }
   static async home(req, res, next) {
     try {
       res.status(200).send({ message: "StudyBuddy is in da haaaussse" });
@@ -375,7 +385,6 @@ class Controller {
             startDate: new Date(),
             endDate: "",
             status: "submitted",
-            likes: 0,
             description,
             categoryId: new ObjectId(categoryId),
             published: false,
