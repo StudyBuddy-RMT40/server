@@ -865,8 +865,7 @@ class Controller {
       const project = await Project.findByPk(projectId);
 
       if (
-        project.status !== "submitted" &&
-        project.Students.role !== "student"
+        project.status !== "submitted"
       ) {
         throw { name: "cannot_access_payment" };
       }
@@ -973,8 +972,9 @@ class Controller {
         videoUrl: tempVideoUrl,
       });
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ error: "Internal Server Error" });
+      // console.log(error);
+      next(error)
+      // res.status(500).json({ error: "Internal Server Error" });
     }
   }
 
@@ -982,11 +982,11 @@ class Controller {
     try {
       let { amount, projectId, teacherId } = req.body;
       if (!amount) {
-        return res.status(400).json("Amount is required");
+        throw {name: 'Amount is required/wallet' }
       }
       amount = parseFloat(amount);
       if (!Number(amount)) {
-        return res.status(400).json("Amount should be number");
+        throw {name: 'Amount should be number' }
       }
       let response = await Wallet.create({
         amount,
@@ -1025,7 +1025,7 @@ class Controller {
       );
 
       if (!updatedStatusWallet) {
-        return res.status(404).json({ message: "data not found" });
+        throw {name: 'data not found/wallet'}
       }
       res.status(200).json({ message: "status has changed to finish" });
     } catch (error) {
@@ -1043,7 +1043,7 @@ class Controller {
       );
 
       if (finishedWallets.length === 0) {
-        return res.status(404).json({ message: "No finished wallets found" });
+        throw {name: 'No finished wallets found/wallet'}
       }
 
       for (const e of finishedWallets) {

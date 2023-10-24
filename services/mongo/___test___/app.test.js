@@ -10,7 +10,7 @@ const {
 const request = require("supertest");
 const app = require("../app");
 const User = require("../models/user");
-const { connectTest, client, getDbTest, db } = require("../config/mongo");
+const { connect, client, getDbTest, db } = require("../config/mongo");
 const { signToken } = require("../helpers/jwt");
 const Review = require("../models/review");
 const Project = require("../models/project");
@@ -24,6 +24,7 @@ const TodoList = require("../models/todolist");
 const fs = require("fs");
 const path = require("path");
 const { ObjectId } = require("mongodb");
+const Storage = require("../models/storage");
 const imagePath = path.join(__dirname, "assets", "image_test.png");
 const videoPath = path.join(__dirname, "assets", "video_test.mp4");
 
@@ -36,7 +37,7 @@ let access_token_teacher;
 let projectId;
 beforeEach(async () => {
   try {
-    await connectTest(async () => {});
+    await connect("study_buddy_test");
     await jest.restoreAllMocks();
     user = await User.findBy({ email: "najmi@mail.com" });
     access_token = signToken({ id: user._id });
@@ -253,6 +254,29 @@ describe("Login user with endpoint /login", () => {
 });
 
 // describe("Google login with endpoint /google-login", () => {
+//   it('should perform Google login and return an access token', async () => {
+//     const googleToken = process.env.GOOGLE_CLIENT_ID; // Replace with a valid Google token
+//     console.log(googleToken, '>>>> go tok')
+
+//       const response = await request(app)
+//         .post('/google-login') 
+//         .set('google_token', googleToken);
+
+//       expect(response.status).toBe(200);
+//       expect(response.body).toHaveProperty('access_token');
+
+//   });
+
+//   it('should handle Google login errors and call next', async () => {
+//     const googleToken = 'invalidgoogletoken'; // Replace with an invalid Google token
+
+//     const response = await request(app)
+//       .post('/google-login') // Replace with the actual route you want to test
+//       .set('google_token', googleToken);
+
+//     expect(response.status).toHave(500); // Assuming you handle this error with a 500 status code
+//     expect(response.body).toHaveProperty('access_token');
+//   });
 // });
 
 describe("User with endpoint /users", () => {
@@ -584,6 +608,9 @@ describe("User with endpoint /buddy_profile", () => {
     const user = await User.findDataProfileTeacher(tempTeachertId);
     expect(user).toBe(null);
   });
+
+  let projectIdRating = ''
+
   it("should return 4.5 after Student add rating 4.5 to buddy", async () => {
     const responseCreate = await request(app)
       .post("/projects")
@@ -601,6 +628,9 @@ describe("User with endpoint /buddy_profile", () => {
         feedback: "nice testing",
       })
       .set("access_token", access_token);
+
+    projectIdRating = responseCreate.body._id
+    console.log(responseCreate, 'KLO')
 
     const response = await request(app)
       .post("/ratings/buddy")
@@ -626,6 +656,22 @@ describe("User with endpoint /buddy_profile", () => {
     console.log(user, "data userr niboyss");
     expect(user.Ratings).toBe(4.5);
     expect(user.Likes).toBe(1);
+  });
+
+  it("should respon 500 and body message", async () => {
+    console.log(projectIdRating, teacherId, 'JOO')
+    jest.spyOn(Rating, "create").mockRejectedValue("Error");
+    const response = await request(app)
+      .post("/ratings/buddy")
+      .send({
+        rating: Number(4.5),
+        projectId: projectIdRating,
+        teacherId: teacherId,
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
   });
 });
 
@@ -810,6 +856,7 @@ describe("Project with endpoint /project", () => {
       .get(`/projects/${tempId}`)
       .set("access_token", access_token);
 
+      console.log(response.body, '>>>>>>')
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Object);
 
@@ -1618,6 +1665,49 @@ describe("Wallet with endpoint /wallet", () => {
     tempId = response.body.id;
   });
 
+  it("should 400 add a new wallet with amount is empty", async () => {
+    const response = await request(app)
+      .post("/wallet/add_wallet")
+      .send({
+        amount: "",
+        projectId: tempProjectId,
+        teacherId: teacherId,
+      })
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should 400 add a new wallet with amount not number", async () => {
+    const response = await request(app)
+      .post("/wallet/add_wallet")
+      .send({
+        amount: "seribu",
+        projectId: tempProjectId,
+        teacherId: teacherId,
+      })
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(Wallet, "create").mockRejectedValue("Error");
+    const response = await request(app)
+      .post("/wallet/add_wallet")
+      .send({
+        amount: 1000,
+        projectId: tempProjectId,
+        teacherId: teacherId,
+      })
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
   it('should change wallet status to "finished"', async () => {
     const response = await request(app)
       .patch(`/wallet/finish_job/${tempProjectId}`)
@@ -1643,16 +1733,15 @@ describe("Wallet with endpoint /wallet", () => {
     expect(response.body).toHaveProperty("myWallet", expect.any(Number));
   });
 
-  // belum selesai
-  // it("should respon 500 and body message", async () => {
-  //   jest.spyOn(Wallet, "getWalletsByStatus").mockRejectedValue("Error");
-  //   const response = await request(app)
-  //     .get("/wallet/my_wallet")
-  //     .set("access_token", access_token_teacher);
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(Wallet, "getAllMyWallet").mockRejectedValue("Error");
+    const response = await request(app)
+      .get("/wallet/my_wallet")
+      .set("access_token", access_token_teacher);
 
-  //   expect(response.status).toBe(500);
-  //   expect(response.body).toHaveProperty("message", expect.any(String));
-  // });
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
 
   it('should withdraw funds from "finished" wallets', async () => {
     const response = await request(app)
@@ -1666,6 +1755,26 @@ describe("Wallet with endpoint /wallet", () => {
     );
   });
 
+  it("should respon 404 change wallet status to finish not found project and body message", async () => {
+    // jest.spyOn(Wallet, "findOneAndUpdateStatus").mockRejectedValue("Error");
+    const response = await request(app)
+      .patch(`/wallet/finish_job/65374bfcc6be110de93f76b3`)
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(404);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 500 change wallet status to finish error and body message", async () => {
+    jest.spyOn(Wallet, "findOneAndUpdateStatus").mockRejectedValue("Error");
+    const response = await request(app)
+      .patch(`/wallet/finish_job/${tempProjectId}`)
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
   it('should 404 withdraw if not founds status "finished" data wallets', async () => {
     const response = await request(app)
       .put(`/wallet/withdraw_wallet`)
@@ -1676,6 +1785,16 @@ describe("Wallet with endpoint /wallet", () => {
       "message",
       "No finished wallets found"
     );
+  });
+
+  it("should respon 500 withdraw wallet and body message", async () => {
+    jest.spyOn(Wallet, "getWalletsByStatus").mockRejectedValue("Error");
+    const response = await request(app)
+      .put(`/wallet/withdraw_wallet`)
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
   });
 });
 
@@ -1697,6 +1816,23 @@ describe("specialist with endpoint /specialist", () => {
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty("message", expect.any(String));
     tempId2 = response.body.id;
+  });
+
+  it("should respon 500 add specialist and body message", async () => {
+    jest.spyOn(Specialist, "create").mockRejectedValue("Error");
+    const response = await request(app)
+    .post(`/specialist`)
+    .send({
+      specialist: [
+        {
+          categoryId: categoriesId,
+        },
+      ],
+    })
+    .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
   it("should respon 403 and body message", async () => {
@@ -1757,6 +1893,16 @@ describe("specialist with endpoint /specialist", () => {
     );
   });
 
+  it("should respon 500 get specialist by id and body message", async () => {
+    jest.spyOn(Specialist, "findById").mockRejectedValue("Error");
+    const response = await request(app)
+    .get(`/specialist/${tempId}`)
+    .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
   it("should respon 200 deleted specialist by id", async () => {
     const response = await request(app)
       .delete(`/specialist/${tempId}`)
@@ -1767,6 +1913,16 @@ describe("specialist with endpoint /specialist", () => {
       "message",
       "Successfully deleted specialist"
     );
+  });
+
+  it("should respon 500 delete specialist and body message", async () => {
+    jest.spyOn(Specialist, "delete").mockRejectedValue("Error");
+    const response = await request(app)
+    .delete(`/specialist/${tempId}`)
+    .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
   });
 
   it("should respon 404 deleted specialist by id if not found", async () => {
@@ -1853,4 +2009,86 @@ describe("mediaUrls with endpoint /upload_docs", () => {
       throw error;
     }
   });
+
+  // belum selesai
+  it("should respon 500 and body message", async () => {
+    jest.spyOn(Storage, "create").mockRejectedValue("Error");
+    const response = await request(app)
+    .post("/upload_docs")
+    .send({
+      projectId: tempProjectId
+    }) 
+    .set("access_token", access_token);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+});
+
+describe('Midtrans with endpoint generate-midtrans-token/:projectId', () => {
+  let tempProjectId = ''
+  it('should create a Midtrans token', async () => {
+
+    const responseProject = await request(app)
+      .post("/projects")
+      .send({
+        name: "Halo",
+        // studentId: ,
+        teacherId: teacherId,
+        startDate: "2023-10-1",
+        endDate: "2023-10-10",
+        status: "submitted",
+        description: "Halo ini untuk test description",
+        likes: 10,
+        categoryId: categoriesId,
+        published: false,
+        goals: "completed testing",
+        feedback: "nice testing",
+      })
+      .set("access_token", access_token);
+
+    tempProjectId = responseProject.body.id
+
+      const response = await request(app)
+        .post(`/generate-midtrans-token/${responseProject.body.id}`) 
+        .send({ price: 2000 }) 
+        .set('access_token', access_token); 
+
+
+      expect(response.status).toBe(201); 
+      expect(response.body).toHaveProperty('token');
+  });
+
+  it('should handle errors and call next', async () => {
+ 
+      const response = await request(app)
+        .post(`/generate-midtrans-token/${projectId}`) 
+        .send({ price: undefined }) 
+        .set('access_token', access_token); 
+
+      expect(response.status).toBe(400); 
+      expect(response.body).toHaveProperty('message', expect.any(String));
+  });
+
+  it('should handle errors cannot access payment and call next', async () => {
+
+    const responseStatus = await request(app)
+      .patch(`/projects/${tempProjectId}`)
+      .send({
+        status: "onProgress",
+      })
+      .set("access_token", access_token);
+
+    const responsePro = await request(app)
+      .get(`/projects/${tempProjectId}`)
+      .set("access_token", access_token);
+
+    const response = await request(app)
+      .post(`/generate-midtrans-token/${tempProjectId}`) 
+      .send({ price: 20000 }) 
+      .set('access_token', access_token); 
+
+    expect(response.status).toBe(400); 
+    expect(response.body).toHaveProperty('message', expect.any(String));
+});
 });
