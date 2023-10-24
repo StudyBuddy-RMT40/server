@@ -68,6 +68,31 @@ class User {
             as: "Projects",
           },
         },
+        {
+          $unwind: {
+            path: "$Projects",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "Projects._id",
+            foreignField: "projectId",
+            as: "Projects.todos",
+          },
+        },
+        {
+          $group: {
+            _id: "$_id",
+            username: { $first: "$username" },
+            email: { $first: "$email" },
+            phoneNumber: { $first: "$phoneNumber" },
+            role: { $first: "$role" },
+            address: { $first: "$address" },
+            Projects: { $push: "$Projects" },
+          },
+        },
       ])
       .toArray();
 
@@ -75,7 +100,15 @@ class User {
       return null;
     }
 
-    const tempProjecId = result[0].Projects.map((project) => project._id);
+    // Calculate the total finished todos in each project
+    const projects = result[0].Projects;
+    for (const project of projects) {
+      project.totalFinished = project.todos.reduce((total, todo) => {
+        return total + (todo.isFinished ? 1 : 0);
+      }, 0);
+    }
+
+    const tempProjecId = projects.map((project) => project._id);
 
     const resultLike = await getDb()
       .collection("likes")
@@ -118,6 +151,7 @@ class User {
       ? totalRatings / resultRatings.length
       : 0.0;
     user.Ratings = parseFloat(averageRating.toFixed(2));
+
     return user;
   }
 
