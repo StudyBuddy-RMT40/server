@@ -23,14 +23,14 @@ cloudinary.config({
 });
 
 class Controller {
-  static async getLandingPage(req,res,next){
+  static async getLandingPage(req, res, next) {
     try {
-      let dataSlider = []
-      let top5 = []
-      
-      res.status({slider:dataSlider, top5:dataTop5})
+      let dataSlider = [];
+      let top5 = [];
+
+      res.status({ slider: dataSlider, top5: dataTop5 });
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   static async home(req, res, next) {
@@ -172,7 +172,7 @@ class Controller {
         throw { name: "invalid_email/password" };
       }
       const access_token = signToken({ id: findUser._id });
-      res.status(200).json({ access_token });
+      res.status(200).json({ access_token: access_token, role: findUser.role });
     } catch (err) {
       next(err);
     }
