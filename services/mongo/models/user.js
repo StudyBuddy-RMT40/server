@@ -174,6 +174,31 @@ class User {
             as: "Projects",
           },
         },
+        {
+          $unwind: {
+            path: "$Projects",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "Projects._id",
+            foreignField: "projectId",
+            as: "Projects.todos",
+          },
+        },
+        {
+          $group: {
+            _id: "$_id",
+            username: { $first: "$username" },
+            email: { $first: "$email" },
+            phoneNumber: { $first: "$phoneNumber" },
+            role: { $first: "$role" },
+            address: { $first: "$address" },
+            Projects: { $push: "$Projects" },
+          },
+        },
       ])
       .toArray();
 
@@ -181,13 +206,22 @@ class User {
       return null;
     }
 
-    const tempProjecId = result[0].Projects.map((project) => project._id);
+    const projects = result[0].Projects;
+
+    // Calculate the total finished todos in each project
+    for (const project of projects) {
+      project.totalFinished = project.todos.reduce((total, todo) => {
+        return total + (todo.isFinished ? 1 : 0);
+      }, 0);
+    }
+
+    const tempProjectId = projects.map((project) => project._id);
 
     const resultLike = await getDb()
       .collection("likes")
       .aggregate([
         {
-          $match: { projectId: { $in: tempProjecId } },
+          $match: { projectId: { $in: tempProjectId } },
         },
         {
           $group: {
@@ -208,7 +242,7 @@ class User {
       .collection("ratings")
       .aggregate([
         {
-          $match: { projectId: { $in: tempProjecId }, teacherId: id },
+          $match: { projectId: { $in: tempProjectId }, teacherId: id },
         },
       ])
       .toArray();

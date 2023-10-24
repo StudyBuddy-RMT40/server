@@ -68,7 +68,6 @@ const dataToSeed = [
   { name: "Konseling" },
   { name: "Pengelolaan Stres" },
   { name: "Pengembangan Keterampilan Kepribadian" },
-  { name: "Lainnya" }
 ];
 
 async function seedData() {
