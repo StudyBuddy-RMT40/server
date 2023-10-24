@@ -62,15 +62,6 @@ class Project {
           },
         },
         {
-          $unwind: "$Category",
-        },
-        {
-          $unwind: "$Teacher",
-        },
-        {
-          $unwind: "$Student",
-        },
-        {
           $lookup: {
             from: "todolists",
             localField: "_id",
@@ -95,7 +86,13 @@ class Project {
           },
         },
         {
-          $unwind: "$mediaUrls",
+          $unwind: "$Category",
+        },
+        {
+          $unwind: "$Teacher",
+        },
+        {
+          $unwind: "$Student",
         },
         {
           $project: {
@@ -144,8 +141,7 @@ class Project {
 
   static async findAll() {
     const getProject = await this.projectCollection()
-      .aggregate(
-      [
+      .aggregate([
         {
           $lookup: {
             from: "categories",
@@ -229,11 +225,18 @@ class Project {
             Likes: { $size: "$Likes" },
           },
         },
-      ]
-    )
+      ])
       .toArray();
 
     return getProject;
+  }
+
+  static async findBy(id, projection) {
+    const user = await this.projectCollection().findOne(
+      { _id: new ObjectId(id) },
+      projection
+    );
+    return user;
   }
 }
 

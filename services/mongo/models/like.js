@@ -16,13 +16,6 @@ class Like {
     return categories;
   }
 
-  static async findById(id) {
-    const category = await this.likeCollection().findOne({
-      _id: new ObjectId(id),
-    });
-    return category;
-  }
-
   static async delete(id, projectId) {
     const deleteCategory = await this.likeCollection().deleteOne({
       $and: [{ userId: new ObjectId(id) }, { projectId: new ObjectId(projectId) }],

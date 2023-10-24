@@ -19,11 +19,21 @@ const connect = async () => {
 };
 
 // config for test
-const connectTest = async () => {
+// const connectTest = async () => {
+//   try {
+//     await client.connect();
+//     db = client.db(testDbName);
+//     return db;
+//   } catch (err) {
+//     console.log(err);
+//   }
+// };
+
+const connectTest = async (callback) => {
   try {
     await client.connect();
     db = client.db(testDbName);
-    return db;
+    callback(); // Call the callback after successful connection
   } catch (err) {
     console.log(err);
   }
@@ -48,4 +58,5 @@ module.exports = {
   client,
   getDbTest,
   getDbSession,
+  db
 };

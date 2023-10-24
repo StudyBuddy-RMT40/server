@@ -13,6 +13,7 @@ const Specialist = require("../models/specialist");
 const Like = require("../models/like");
 const midtransClient = require("midtrans-client");
 const Storage = require("../models/storage");
+const Wallet = require("../models/wallet");
 const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
@@ -206,7 +207,6 @@ class Controller {
     }
   }
 
-  // untuk keperluan testing
   static async getUserById(req, res, next) {
     try {
       const id = req.params;
@@ -447,7 +447,7 @@ class Controller {
   static async deleteProject(req, res, next) {
     try {
       const { id } = req.params;
-      let checkProject = await Project.findByPk(id);
+      let checkProject = await Project.findBy(id);
       if (!checkProject) {
         throw { name: "not_found/project" };
       }
@@ -471,24 +471,24 @@ class Controller {
       if (!categoryId) {
         throw { name: "empty_categoryId/project" };
       }
-      if (name) {
-        const nameProject = await Project.findOneAndUpdate(id, {
-          $set: { name },
-        });
-        res.status(200).json({ message: "Name updated successfully" });
+
+      const nameProject = await Project.findOneAndUpdate(id, {
+        $set: { name },
+      });
+
+      const descriptionProject = await Project.findOneAndUpdate(id, {
+        $set: { description },
+      });
+
+      const categoryIdProject = await Project.findOneAndUpdate(id, {
+        $set: { categoryId },
+      });
+
+      if (!nameProject || !descriptionProject || !categoryIdProject) {
+        throw { name: "empty_updated" };
       }
-      if (description) {
-        const descriptionProject = await Project.findOneAndUpdate(id, {
-          $set: { description },
-        });
-        res.status(200).json({ message: "Description updated successfully" });
-      }
-      if (categoryId) {
-        const categoryIdProject = await Project.findOneAndUpdate(id, {
-          $set: { categoryId },
-        });
-        res.status(200).json({ message: "Category id updated successfully" });
-      }
+
+      res.status(200).json({ message: "update successfully" });
     } catch (err) {
       next(err);
     }
@@ -499,7 +499,13 @@ class Controller {
       const { id } = req.params;
       const { status } = req.body;
 
-      const validStatusValues = ["accepted", "paid", "onProgress", "finished"];
+      const validStatusValues = [
+        "accepted",
+        "paid",
+        "onProgress",
+        "finished",
+        "archieved",
+      ];
 
       if (!status || !validStatusValues.includes(status)) {
         throw { name: "invalid_status/status" };
@@ -533,11 +539,17 @@ class Controller {
   static async addRatingStudent(req, res, next) {
     try {
       let { rating, studentId, projectId } = req.body;
-      console.log(req.body);
-      if (!rating || !studentId || !projectId) {
-        return res
-          .status(400)
-          .json({ message: "rating studentId projectId is required" });
+
+      if (!rating) {
+        return res.status(400).json({ message: "Rating is required" });
+      }
+
+      if (!studentId) {
+        return res.status(400).json({ message: "Student ID is required" });
+      }
+
+      if (!projectId) {
+        return res.status(400).json({ message: "Project ID is required" });
       }
 
       rating = parseFloat(rating);
@@ -554,13 +566,15 @@ class Controller {
         return res.status(403).json({ message: "already have rating" });
       }
 
-      await Rating.create({
+      let studentRating = await Rating.create({
         studentId: new ObjectId(studentId),
         projectId: new ObjectId(projectId),
         rating,
       });
 
-      res.status(201).json({ message: "Add rating success" });
+      res
+        .status(201)
+        .json({ message: "Add rating success", id: studentRating.insertedId });
     } catch (err) {
       next(err);
     }
@@ -570,10 +584,16 @@ class Controller {
     try {
       let { rating, teacherId, projectId } = req.body;
 
-      if (!rating || !teacherId || !projectId) {
-        return res
-          .status(400)
-          .json({ message: "rating teacherId projectId is required" });
+      if (!rating) {
+        return res.status(400).json({ message: "Rating is required" });
+      }
+
+      if (!teacherId) {
+        return res.status(400).json({ message: "Student ID is required" });
+      }
+
+      if (!projectId) {
+        return res.status(400).json({ message: "Project ID is required" });
       }
 
       rating = parseFloat(rating);
@@ -713,6 +733,18 @@ class Controller {
     }
   }
 
+  static async deleteSpecialistById(req, res, next) {
+    try {
+      let { id } = req.params;
+      let response = await Specialist.delete(id);
+      if (response.deletedCount === 0) {
+        return res.status(404).json({ message: "Not Found" });
+      }
+      res.status(200).json({ message: "Successfully deleted specialist" });
+    } catch (error) {
+      next(error);
+    }
+  }
   static async getAllLike(req, res, next) {
     try {
       let likes = await Like.findAll();
@@ -753,8 +785,9 @@ class Controller {
       }
       let response = await Like.delete(id, projectId);
 
-      if (!response) {
-        throw res.status(403).json({ message: "authorize" });
+      console.log(response, ">>>");
+      if (response.deletedCount === 0) {
+        throw { name: "like_authorize" };
       }
 
       res.status(200).json({ message: "Your not love me anymore" });
@@ -823,14 +856,13 @@ class Controller {
 
   static async generateMidtrans(req, res, next) {
     try {
-
-      const { price } = req.body
+      const { price } = req.body;
       if (!price) {
-        throw { name: 'empty_price' }
+        throw { name: "empty_price" };
       }
 
-      const { projectId } = req.params
-      const project = await Project.findByPk(projectId)
+      const { projectId } = req.params;
+      const project = await Project.findByPk(projectId);
 
       if (
         project.status !== "submitted" &&
@@ -846,18 +878,18 @@ class Controller {
       });
 
       let parameter = {
-        "transaction_details": {
-          "order_id": "TRANSACTION_" + Math.floor(1000 + Math.random() * 2000),
-          "gross_amount": Number(price)
+        transaction_details: {
+          order_id: "TRANSACTION_" + Math.floor(1000 + Math.random() * 2000),
+          gross_amount: Number(price),
         },
-        "credit_card": {
-          "secure": true
+        credit_card: {
+          secure: true,
         },
-        "customer_details": {
-          "first_name": project.Student.username,
-          "email": project.Student.email,
-          "phone": project.Student.phoneNumber
-        }
+        customer_details: {
+          first_name: project.Student.username,
+          email: project.Student.email,
+          phone: project.Student.phoneNumber,
+        },
       };
 
       const midtransToken = await snap.createTransaction(parameter);
@@ -871,17 +903,6 @@ class Controller {
   static async addMediaDocumentation(req, res, next) {
     try {
       let { projectId } = req.body;
-
-      if (!projectId) {
-        return res.status(400).json("project id is empty");
-      }
-
-      let checkProject = await Storage.findById(projectId);
-
-      if (checkProject) {
-        return res.status(400).json("already have image and video");
-      }
-
       // Check if 'image' and 'video' files exist in req.files
       const imageFile =
         req.files && req.files["image"] ? req.files["image"][0].buffer : null; // Image buffer
@@ -890,6 +911,18 @@ class Controller {
 
       let tempImageUrl;
       let tempVideoUrl;
+
+      if (!projectId) {
+        return res.status(400).json({ message: "project id is empty" });
+      }
+
+      let checkProject = await Storage.findById(projectId);
+
+      if (checkProject) {
+        return res
+          .status(400)
+          .json({ message: "already have image and video" });
+      }
 
       if (imageFile) {
         const result = await new Promise((resolve, reject) => {
@@ -945,84 +978,88 @@ class Controller {
     }
   }
 
-  // static async updateMediaDocumentation(req, res, next) {
-  //   try {
-  //     const { projectId } = req.body;
+  static async addWallet(req, res, next) {
+    try {
+      let { amount, projectId, teacherId } = req.body;
+      if (!amount) {
+        return res.status(400).json("Amount is required");
+      }
+      amount = parseFloat(amount);
+      if (!Number(amount)) {
+        return res.status(400).json("Amount should be number");
+      }
+      let response = await Wallet.create({
+        amount,
+        projectId: new ObjectId(projectId),
+        teacherId: new ObjectId(teacherId),
+        status: "paid",
+      });
 
-  //     if (!projectId) {
-  //       return res.status(400).json("project id is empty");
-  //     }
+      res
+        .status(201)
+        .json({ message: "Add amount success", id: response.insertedId });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-  //     const existingDocument = await Storage.findById(projectId);
+  static async getAllWalletByUserId(req, res, next) {
+    try {
+      const { id } = req.user;
+      const wallets = await Wallet.getAllMyWallet(id);
+      res.status(200).json({ myWallet: wallets });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-  //     if (!existingDocument) {
-  //       return res.status(404).json("Document not found");
-  //     }
+  static async changeStatusWalletToFinish(req, res, next) {
+    try {
+      const { projectId } = req.params;
+      let status = "finished";
+      const updatedStatusWallet = await Wallet.findOneAndUpdateStatus(
+        projectId,
+        {
+          $set: { status },
+        }
+      );
 
-  //     const imageFile =
-  //       req.files && req.files["image"] ? req.files["image"][0].buffer : null;
-  //     const videoFile =
-  //       req.files && req.files["video"] ? req.files["video"][0].buffer : null;
+      if (!updatedStatusWallet) {
+        return res.status(404).json({ message: "data not found" });
+      }
+      res.status(200).json({ message: "status has changed to finish" });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-  //     const uploadOptions = { resource_type: "video" };
+  static async withdrawWallet(req, res, next) {
+    try {
+      const { id: teacherId } = req.user;
 
-  //     let tempImageUrl = existingDocument.imageUrl;
-  //     let tempVideoUrl = existingDocument.videoUrl;
+      const finishedWallets = await Wallet.getWalletsByStatus(
+        teacherId,
+        "finished"
+      );
 
-  //     if (imageFile) {
-  //       const imageResult = await new Promise((resolve, reject) => {
-  //         cloudinary.uploader
-  //           .upload_stream({}, (error, result) => {
-  //             if (error) {
-  //               reject(error);
-  //             } else {
-  //               resolve(result.secure_url);
-  //             }
-  //           })
-  //           .end(imageFile);
-  //       });
-  //       tempImageUrl = imageResult;
-  //     }
+      if (finishedWallets.length === 0) {
+        return res.status(404).json({ message: "No finished wallets found" });
+      }
 
-  //     if (videoFile) {
-  //       const videoResult = await new Promise((resolve, reject) => {
-  //         cloudinary.uploader
-  //           .upload_stream(uploadOptions, (error, result) => {
-  //             if (error) {
-  //               reject(error);
-  //             } else {
-  //               resolve(result.secure_url);
-  //             }
-  //           })
-  //           .end(videoFile);
-  //       });
-  //       tempVideoUrl = videoResult;
-  //     }
+      for (const e of finishedWallets) {
+        const response = await Wallet.findOneAndUpdate(e._id, {
+          $set: { status: "withdraw", amount: 0 },
+        });
+        console.log(`Updated wallet: ${e._id}`, response);
+      }
 
-  //     const updateObject = {
-  //       videoUrl: tempVideoUrl,
-  //       imageUrl: tempImageUrl,
-  //     };
-
-  //     const updatedDocument = await Storage.findOneAndUpdate(
-  //       projectId,
-  //       updateObject
-  //     );
-
-  //     if (updatedDocument) {
-  //       res.status(200).json({
-  //         message: "Your product has been updated",
-  //         imgUrl: tempImageUrl,
-  //         videoUrl: tempVideoUrl,
-  //       });
-  //     } else {
-  //       res.status(404).json({ error: "Document not found" });
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //     res.status(500).json({ error: "Internal Server Error" });
-  //   }
-  // }
+      res
+        .status(200)
+        .json({ message: "Amount has been withdrawn from finished wallets" });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = Controller;
