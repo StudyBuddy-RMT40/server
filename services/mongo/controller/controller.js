@@ -249,15 +249,12 @@ class Controller {
   static async updateUser(req, res, next) {
     try {
       const id = req.user.id;
-      let { username, email, phoneNumber, password, address } = req.body;
+      let { username, email, phoneNumber, address } = req.body;
       if (!username) {
         throw { name: "empty_username" };
       }
       if (!email) {
         throw { name: "empty_email" };
-      }
-      if (!password) {
-        throw { name: "empty_password" };
       }
       if (!phoneNumber) {
         throw { name: "empty_phoneNumber" };
@@ -265,9 +262,8 @@ class Controller {
       if (!address) {
         throw { name: "empty_address" };
       }
-      password = hashPassword(password);
       const updateReview = await User.findOneAndUpdate(id, {
-        $set: { username, email, phoneNumber, password, address },
+        $set: { username, email, phoneNumber, address },
       });
       res
         .status(200)
