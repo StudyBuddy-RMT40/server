@@ -237,36 +237,6 @@ class Controller {
     }
   }
 
-  static async googleLogin(req, res, next) {
-    try {
-      let status = 200;
-      let access_token;
-      const { google_token } = req.headers;
-      const client = new OAuth2Client();
-      const ticket = await client.verifyIdToken({
-        idToken: google_token,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-
-      const payload = ticket.getPayload();
-
-      const user = await User.findBy({ email: payload.email });
-      if (!user) {
-        status = 201;
-        const newUser = await User.create({
-          username: payload.name,
-          email: payload.email,
-        });
-        access_token = signToken({ id: newUser.insertedId });
-      } else {
-        access_token = signToken({ id: user._id });
-      }
-      res.status(status).json({ access_token });
-    } catch (err) {
-      next(err);
-    }
-  }
-
   static async getUser(req, res, next) {
     try {
       const user = await User.findAll();
@@ -604,6 +574,7 @@ class Controller {
     try {
       let { rating, studentId, projectId } = req.body;
 
+      console.log(typeof rating, rating, studentId, projectId, '>>>> con')
       if (!rating) {
         return res.status(400).json({ message: "Rating is required" });
       }
@@ -929,7 +900,7 @@ class Controller {
       const project = await Project.findByPk(projectId);
 
       if (
-        project.status !== "submitted"
+        project.status !== "Submitted"
       ) {
         throw { name: "cannot_access_payment" };
       }
