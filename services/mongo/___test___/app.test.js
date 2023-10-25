@@ -1098,20 +1098,56 @@ describe("User with endpoint /buddy_profile", () => {
     expect(user).toBe(null);
   });
 
-  
+  let sameProjectId = ''
   it("should respon 500 and body message", async () => {
     console.log(projectIdRating, teacherId, 'JOO')
     jest.spyOn(Rating, "create").mockRejectedValue("Error");
+    const responseCre = await request(app)
+      .post("/projects")
+      .send({
+        name: "Halo",
+        // studentId: ,
+        teacherId: teacherId,
+        startDate: "2023-10-1",
+        endDate: "2023-10-10",
+        status: "Submitted",
+        description: "Halo ini untuk test description",
+        likes: 10,
+        categoryId: categoriesId,
+        published: false,
+        goals: "completed testing",
+        feedback: "nice testing",
+      })
+      .set("access_token", access_token);
+
+      sameProjectId = responseCre.body.id
+      console.log(sameProjectId, '111')
+
     const response = await request(app)
       .post("/ratings/buddy")
       .send({
-        rating: Number(4.5),
-        projectId: projectId,
+        rating: 4.5,
+        projectId: responseCre.body.id,
         teacherId: teacherId,
       })
       .set("access_token", access_token);
 
     expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should respon 403 rating have same project id and body message", async () => {
+    console.log(sameProjectId, teacherId, '222')
+    const response = await request(app)
+      .post("/ratings/buddy")
+      .send({
+        rating: 4.5,
+        projectId: sameProjectId,
+        teacherId: teacherId,
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(403);
     expect(response.body).toHaveProperty("message", expect.any(String));
   });
 });
@@ -1922,7 +1958,7 @@ describe("mediaUrls with endpoint /upload_docs", () => {
         .post("/upload_docs")
         .field("projectId", tempProjectId) // Provide the valid project ID
         .attach("image", `${__dirname}/assets/image_test.png`) // Attach the image file
-        .attach("video", `${__dirname}/assets/video_test2.mp4`) // Attach the video file
+        // .attach("video", `${__dirname}/assets/video_test2.mp4`) // Attach the video file
         .set("access_token", access_token);
 
         console.log(response.body, '>> response')

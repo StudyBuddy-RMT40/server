@@ -16,6 +16,10 @@ const Storage = require("../models/storage");
 const Wallet = require("../models/wallet");
 const cloudinary = require("cloudinary").v2;
 
+const openai = require("openai");
+const apiKey = "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";
+const client = new openai({ apiKey });
+
 cloudinary.config({
   cloud_name: "ddp528yjf",
   api_key: "979463692446595",
@@ -390,7 +394,18 @@ class Controller {
 
   static async addProject(req, res, next) {
     try {
-      const { name, teacherId, description, categoryId, goals } = req.body;
+      const {
+        name,
+        teacherId,
+        description,
+        categoryId,
+        goals,
+        userMessage,
+        rawData,
+      } = req.body;
+
+      let {id} = req.user
+
       if (!name) {
         throw { name: "empty_name/project" };
       }
@@ -403,17 +418,19 @@ class Controller {
       if (!goals) {
         throw { name: "empty_goals/project" };
       }
-      const { db, session } = getDbSession();
 
-      await session.withTransaction(
-        async () => {
+      const { session } = getDbSession();
+
+      try {
+        await session.withTransaction(async () => {
           const response = await Project.create({
-            name,
-            studentId: req.user.id,
+            name: `Pembuatan ${name}`,
+            studentId: new ObjectId(id),
             teacherId: new ObjectId(teacherId),
             startDate: new Date(),
-            endDate: "",
+            endDate: null,
             status: "Submitted",
+            likes: 0,
             description,
             categoryId: new ObjectId(categoryId),
             published: false,
@@ -421,38 +438,55 @@ class Controller {
             feedback: "",
           });
 
-          let todos = [
-            {
-              name: "belajar tambah-tambahan",
-              learningUrl: "",
-              projectId: new ObjectId(response.insertedId),
-              isFinished: false,
-            },
-            {
-              name: "belajar tambah-tambahan",
-              learningUrl: "",
-              projectId: new ObjectId(response.insertedId),
-              isFinished: false,
-            },
-          ];
+          console.log(response.insertedId);
 
-          for (const e of todos) {
-            await TodoList.create(e);
+          const responseAi = await client.chat.completions.create({
+            messages: [
+              {
+                role: "system",
+                content: `Buat 5 daftar tugas untuk pembuatan ${name} dalam format JSON seperti contoh ini:[{'tugas':''},{'tugas':''}].`,
+              },
+            ],
+            model: "gpt-3.5-turbo",
+          });
+
+    
+          console.log(responseAi.choices[0].message.content, '<<< AI')
+          // Attempt to parse the AI response, or handle the error gracefully
+          let parsedData;
+          try {
+            parsedData = await JSON.parse(
+              responseAi.choices[0].message.content
+            );
+            console.log(parsedData);
+          } catch (err) {
+            console.error("Error parsing AI response:", err);
+            parsedData = responseAi.choices[0].message.content;
           }
 
-          res.status(201).json({
-            message: `Project has been successfully created`,
-            id: response.insertedId,
+          parsedData.forEach(async (item) => {
+            await TodoList.create({
+              projectId: response.insertedId,
+              lectureUrl: "",
+              isFinished: false,
+              name: item.tugas,
+            });
           });
-        },
-        {
-          readConcern: { level: "local" },
-          writeConcern: { w: "majority" },
-          readPreference: "primary",
-        }
-      );
-    } catch (err) {
-      next(err);
+          
+
+          res.status(201).json({
+            message: "Project has been successfully created",
+            id: response.insertedId,
+            parsedData
+          });
+        });
+      } catch (err) {
+        next(err);
+      } finally {
+        session.endSession();
+      }
+    } catch (error) {
+      next(error);
     }
   }
 
