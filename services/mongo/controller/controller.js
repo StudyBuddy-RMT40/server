@@ -935,6 +935,7 @@ class Controller {
 
   // media
   static async addMediaDocumentation(req, res, next) {
+    console.log('MASUK MEDIA')
     try {
       let { projectId } = req.body;
       // Check if 'image' and 'video' files exist in req.files
@@ -943,6 +944,7 @@ class Controller {
       const videoFile =
         req.files && req.files["video"] ? req.files["video"][0].buffer : null; // Video buffer
 
+        console.log(req.files, 'reqfiles')
       let tempImageUrl;
       let tempVideoUrl;
 
@@ -958,6 +960,7 @@ class Controller {
           .json({ message: "already have image and video" });
       }
 
+      console.log(imageFile, 'imagefile')
       if (imageFile) {
         const result = await new Promise((resolve, reject) => {
           cloudinary.uploader
@@ -971,6 +974,7 @@ class Controller {
             .end(imageFile);
         });
         tempImageUrl = await result.secure_url;
+        console.log(tempImageUrl, 'tempimage')
       }
 
       if (videoFile) {
@@ -991,6 +995,7 @@ class Controller {
             .end(videoFile);
         });
         tempVideoUrl = await result.secure_url;
+        console.log(tempVideoUrl, 'tempvideo')
       }
 
       let value = {
@@ -1001,6 +1006,7 @@ class Controller {
 
       await Storage.create(value);
 
+      console.log(value, 'controler')
       res.status(201).json({
         message: "Your product has been added",
         imgUrl: tempImageUrl,

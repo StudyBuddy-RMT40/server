@@ -960,25 +960,6 @@ describe("User with endpoint /student_profile", () => {
 
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty("message", expect.any(String));
-
-    // const responseLike = await request(app)
-    //   .post("/likes")
-    //   .send({
-    //     projectId: responseCreate.body.id,
-    //   })
-    //   .set("access_token", access_token);
-
-    // const user = await User.findDataProfileStudent(new ObjectId(tempStudentId));
-    // console.log(user, "data userr niboyss");
-    // expect(user.Ratings).toBe(4);
-    // expect(user.Likes).toBe(1);
-
-    // const responseDelete = await request(app)
-    //   .delete("/likes")
-    //   .send({
-    //     projectId: responseCreate.body.id,
-    //   })
-    //   .set("access_token", access_token);
   });
 
   let tempStudentId = "";
@@ -1125,7 +1106,7 @@ describe("User with endpoint /buddy_profile", () => {
       .post("/ratings/buddy")
       .send({
         rating: Number(4.5),
-        projectId: projectIdRating,
+        projectId: projectId,
         teacherId: teacherId,
       })
       .set("access_token", access_token);
@@ -1933,12 +1914,18 @@ describe("mediaUrls with endpoint /upload_docs", () => {
 
       tempProjectId = responseCreate.body.id;
 
+      console.log(imagePath, '<< image')
+      console.log(videoPath, '<< video')
+
+
       const response = await request(app)
         .post("/upload_docs")
         .field("projectId", tempProjectId) // Provide the valid project ID
-        // .attach("image", fs.readFileSync(imagePath)) // Attach the image file
-        // .attach("video", fs.readFileSync(videoPath)) // Attach the video file
+        .attach("image", `${__dirname}/assets/image_test.png`) // Attach the image file
+        .attach("video", `${__dirname}/assets/video_test2.mp4`) // Attach the video file
         .set("access_token", access_token);
+
+        console.log(response.body, '>> response')
 
       expect(response.statusCode).toBe(201);
       expect(response.body).toHaveProperty(
@@ -1948,7 +1935,7 @@ describe("mediaUrls with endpoint /upload_docs", () => {
       // expect(response.body).toHaveProperty("imgUrl");
       // expect(response.body).toHaveProperty("videoUrl");
     } catch (error) {
-      console.error(error);
+      console.log(error);
       throw error;
     }
   });
@@ -2085,6 +2072,68 @@ describe('Midtrans with endpoint generate-midtrans-token/:projectId', () => {
 });
 
 describe("Authorization", () => {
+  it("should return autho for student add rating 4 to stundent", async () => {
+    const responseCreate = await request(app)
+      .post("/projects")
+      .send({
+        name: "Halo",
+        teacherId: teacherId, // Provide a valid teacherId
+        startDate: "2023-10-1",
+        endDate: "2023-10-10",
+        status: "submitted",
+        description: "Halo ini untuk test description",
+        likes: 10,
+        categoryId: categoriesId, // Provide a valid categoryId
+        published: false,
+        goals: "completed testing",
+        feedback: "nice testing",
+      })
+      .set("access_token", access_token);
+
+    const response = await request(app)
+      .post("/ratings/student")
+      .send({
+        rating: 4,
+        studentId: studentId,
+        projectId: responseCreate.body.id,
+      })
+      .set("access_token", access_token);
+
+    expect(response.status).toBe(403);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
+  it("should return autho for buddy add rating 4 to stundent", async () => {
+    const responseCreate = await request(app)
+      .post("/projects")
+      .send({
+        name: "Halo",
+        teacherId: teacherId, // Provide a valid teacherId
+        startDate: "2023-10-1",
+        endDate: "2023-10-10",
+        status: "submitted",
+        description: "Halo ini untuk test description",
+        likes: 10,
+        categoryId: categoriesId, // Provide a valid categoryId
+        published: false,
+        goals: "completed testing",
+        feedback: "nice testing",
+      })
+      .set("access_token", access_token);
+
+    const response = await request(app)
+      .post("/ratings/buddy")
+      .send({
+        rating: 4,
+        studentId: studentId,
+        projectId: responseCreate.body.id,
+      })
+      .set("access_token", access_token_teacher);
+
+    expect(response.status).toBe(403);
+    expect(response.body).toHaveProperty("message", expect.any(String));
+  });
+
 });
 
 
