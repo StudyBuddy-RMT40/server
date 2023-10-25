@@ -237,36 +237,6 @@ class Controller {
     }
   }
 
-  static async googleLogin(req, res, next) {
-    try {
-      let status = 200;
-      let access_token;
-      const { google_token } = req.headers;
-      const client = new OAuth2Client();
-      const ticket = await client.verifyIdToken({
-        idToken: google_token,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-
-      const payload = ticket.getPayload();
-
-      const user = await User.findBy({ email: payload.email });
-      if (!user) {
-        status = 201;
-        const newUser = await User.create({
-          username: payload.name,
-          email: payload.email,
-        });
-        access_token = signToken({ id: newUser.insertedId });
-      } else {
-        access_token = signToken({ id: user._id });
-      }
-      res.status(status).json({ access_token });
-    } catch (err) {
-      next(err);
-    }
-  }
-
   static async getUser(req, res, next) {
     try {
       const user = await User.findAll();
@@ -604,6 +574,7 @@ class Controller {
     try {
       let { rating, studentId, projectId } = req.body;
 
+      console.log(typeof rating, rating, studentId, projectId, '>>>> con')
       if (!rating) {
         return res.status(400).json({ message: "Rating is required" });
       }
@@ -929,7 +900,7 @@ class Controller {
       const project = await Project.findByPk(projectId);
 
       if (
-        project.status !== "submitted"
+        project.status !== "Submitted"
       ) {
         throw { name: "cannot_access_payment" };
       }
@@ -964,6 +935,7 @@ class Controller {
 
   // media
   static async addMediaDocumentation(req, res, next) {
+    console.log('MASUK MEDIA')
     try {
       let { projectId } = req.body;
       // Check if 'image' and 'video' files exist in req.files
@@ -972,6 +944,7 @@ class Controller {
       const videoFile =
         req.files && req.files["video"] ? req.files["video"][0].buffer : null; // Video buffer
 
+        console.log(req.files, 'reqfiles')
       let tempImageUrl;
       let tempVideoUrl;
 
@@ -987,6 +960,7 @@ class Controller {
           .json({ message: "already have image and video" });
       }
 
+      console.log(imageFile, 'imagefile')
       if (imageFile) {
         const result = await new Promise((resolve, reject) => {
           cloudinary.uploader
@@ -1000,6 +974,7 @@ class Controller {
             .end(imageFile);
         });
         tempImageUrl = await result.secure_url;
+        console.log(tempImageUrl, 'tempimage')
       }
 
       if (videoFile) {
@@ -1020,6 +995,7 @@ class Controller {
             .end(videoFile);
         });
         tempVideoUrl = await result.secure_url;
+        console.log(tempVideoUrl, 'tempvideo')
       }
 
       let value = {
@@ -1030,6 +1006,7 @@ class Controller {
 
       await Storage.create(value);
 
+      console.log(value, 'controler')
       res.status(201).json({
         message: "Your product has been added",
         imgUrl: tempImageUrl,

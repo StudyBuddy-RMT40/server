@@ -12,7 +12,6 @@ router.get("/", Controller.home);
 
 router.post("/register", Controller.register);
 router.post("/login", Controller.login);
-router.post("/google-login", Controller.googleLogin);
 router.get("landing-page",Controller.getLandingPage)
 
 router.get('/pub/projects', Controller.getProject)
