@@ -393,6 +393,7 @@ class Controller {
   }
 
   static async addProject(req, res, next) {
+    console.log(req.body);
     try {
       const {
         name,
@@ -404,7 +405,7 @@ class Controller {
         rawData,
       } = req.body;
 
-      let {id} = req.user
+      let { id } = req.user;
 
       if (!name) {
         throw { name: "empty_name/project" };
@@ -420,11 +421,10 @@ class Controller {
       }
 
       const { session } = getDbSession();
-
       try {
         await session.withTransaction(async () => {
           const response = await Project.create({
-            name: `Pembuatan ${name}`,
+            name,
             studentId: new ObjectId(id),
             teacherId: new ObjectId(teacherId),
             startDate: new Date(),
@@ -440,18 +440,19 @@ class Controller {
 
           console.log(response.insertedId);
 
+          console.log("proses pembuatan ai");
           const responseAi = await client.chat.completions.create({
             messages: [
               {
                 role: "system",
-                content: `Buat 5 daftar tugas untuk pembuatan ${name} dalam format JSON seperti contoh ini:[{'tugas':''},{'tugas':''}].`,
+                content: `Buat 5 daftar tugas untuk ${name} pastikan dalam format JSON seperti contoh ini:[{'tugas':''},{'tugas':''}].`,
               },
             ],
             model: "gpt-3.5-turbo",
           });
+          console.log("jobs done");
 
-    
-          console.log(responseAi.choices[0].message.content, '<<< AI')
+          console.log(responseAi.choices[0].message.content);
           // Attempt to parse the AI response, or handle the error gracefully
           let parsedData;
           try {
@@ -472,18 +473,15 @@ class Controller {
               name: item.tugas,
             });
           });
-          
 
           res.status(201).json({
             message: "Project has been successfully created",
             id: response.insertedId,
-            parsedData
+            parsedData,
           });
         });
       } catch (err) {
         next(err);
-      } finally {
-        session.endSession();
       }
     } catch (error) {
       next(error);

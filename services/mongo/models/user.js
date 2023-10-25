@@ -82,9 +82,31 @@ class User {
             as: "Projects.Category",
           },
         },
+        // {
+        //   $unwind: "$Projects.Category",
+        // },
         {
-          $unwind: "$Projects.Category",
+          $lookup: {
+            from: "users",
+            localField: "Projects.teacherId",
+            foreignField: "_id",
+            as: "Projects.Teacher",
+          },
         },
+        // {
+        //   $unwind: "$Projects.Teacher",
+        // },
+        {
+          $lookup: {
+            from: "users",
+            localField: "Projects.studentId",
+            foreignField: "_id",
+            as: "Projects.Student",
+          },
+        },
+        // {
+        //   $unwind: "$Projects.Student",
+        // },
         {
           $lookup: {
             from: "todolists",
@@ -110,6 +132,16 @@ class User {
     if (result.length === 0) {
       return null;
     }
+
+    if (result[0].Projects[0].Category.length > 0) {
+      if (result[0].Projects.length > 0) {
+        result[0].Projects.forEach(element => {
+          delete element.Teacher[0].password
+          delete element.Student[0].password
+        });
+      }
+    }
+    
 
     // Calculate the total finished todos in each project
     const projects = result[0].Projects;
@@ -199,8 +231,24 @@ class User {
             as: "Projects.Category",
           },
         },
+        // {
+        //   $unwind: "$Projects.Category",
+        // },
         {
-          $unwind: "$Projects.Category",
+          $lookup: {
+            from: "users",
+            localField: "Projects.teacherId",
+            foreignField: "_id",
+            as: "Projects.Teacher",
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "Projects.studentId",
+            foreignField: "_id",
+            as: "Projects.Student",
+          },
         },
         {
           $lookup: {
@@ -226,6 +274,15 @@ class User {
 
     if (result.length === 0) {
       return null;
+    }
+
+    if (result[0].Projects[0].Category.length > 0) {
+      if (result[0].Projects.length > 0) {
+        result[0].Projects.forEach(element => {
+          delete element.Teacher[0].password
+          delete element.Student[0].password
+        });
+      }
     }
 
     const projects = result[0].Projects;
