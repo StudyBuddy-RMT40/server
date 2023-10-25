@@ -534,9 +534,9 @@ class Controller {
       const { status } = req.body;
 
       const validStatusValues = [
-        "Accepted", 
-        "Paid", 
-        "On Progress", 
+        "Accepted",
+        "Paid",
+        "On Progress",
         "Finished",
         "To Review"
       ];
@@ -944,7 +944,7 @@ class Controller {
       const videoFile =
         req.files && req.files["video"] ? req.files["video"][0].buffer : null; // Video buffer
 
-        console.log(req.files, 'reqfiles')
+      console.log(req.files, 'reqfiles')
       let tempImageUrl;
       let tempVideoUrl;
 
@@ -1023,11 +1023,11 @@ class Controller {
     try {
       let { amount, projectId, teacherId } = req.body;
       if (!amount) {
-        throw {name: 'Amount is required/wallet' }
+        throw { name: 'Amount is required/wallet' }
       }
       amount = parseFloat(amount);
       if (!Number(amount)) {
-        throw {name: 'Amount should be number' }
+        throw { name: 'Amount should be number' }
       }
       let response = await Wallet.create({
         amount,
@@ -1066,7 +1066,7 @@ class Controller {
       );
 
       if (!updatedStatusWallet) {
-        throw {name: 'data not found/wallet'}
+        throw { name: 'data not found/wallet' }
       }
       res.status(200).json({ message: "status has changed to finish" });
     } catch (error) {
@@ -1084,7 +1084,7 @@ class Controller {
       );
 
       if (finishedWallets.length === 0) {
-        throw {name: 'No finished wallets found/wallet'}
+        throw { name: 'No finished wallets found/wallet' }
       }
 
       for (const e of finishedWallets) {
