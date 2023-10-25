@@ -443,7 +443,7 @@ class Controller {
             teacherId: new ObjectId(teacherId),
             startDate: new Date(),
             endDate: "",
-            status: "submitted",
+            status: "Submitted",
             description,
             categoryId: new ObjectId(categoryId),
             published: false,
@@ -564,11 +564,11 @@ class Controller {
       const { status } = req.body;
 
       const validStatusValues = [
-        "accepted",
-        "paid",
-        "onProgress",
-        "finished",
-        "toReview",
+        "Accepted", 
+        "Paid", 
+        "On Progress", 
+        "Finished",
+        "To Review"
       ];
 
       if (!status || !validStatusValues.includes(status)) {
