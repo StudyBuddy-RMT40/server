@@ -182,6 +182,17 @@ class User {
         },
         {
           $lookup: {
+            from: "categories",
+            localField: "Projects.categoryId",
+            foreignField: "_id",
+            as: "Projects.Category",
+          },
+        },
+        {
+          $unwind: "$Projects.Category",
+        },
+        {
+          $lookup: {
             from: "todolists",
             localField: "Projects._id",
             foreignField: "projectId",
