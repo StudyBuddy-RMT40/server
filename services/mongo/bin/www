@@ -1,0 +1,11 @@
+const app = require('../app')
+const { connect } = require('../config/mongo')
+const port = 3000
+
+
+connect()
+    .then(() => {
+        app.listen(port, () => {
+            console.log(`Example app listening on port ${port}`)
+        })
+    })
