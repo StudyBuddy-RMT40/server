@@ -32,10 +32,9 @@ class Category {
 
   static async findByName(name, address) {
     const category = await this.categoryCollection().findOne({ name: name });
-    console.log(category, "<<<<<<");
+
     if (category) {
       const categoryId = category._id;
-      console.log(categoryId, "<<<<<<");
       const specialists = await getDb()
         .collection("specialists")
         .aggregate([
@@ -51,20 +50,22 @@ class Category {
             },
           },
           {
-            $project: {
-              categoryId: 0, // Exclude categoryId from the result
-            },
+            $unwind: "$Teacher",
           },
           {
             $project: {
+              categoryId: 1,
               "Teacher._id": 1,
               "Teacher.username": 1,
+              "Teacher.email": 1,
+              "Teacher.phoneNumber": 1,
+              "Teacher.role": 1,
               "Teacher.address": 1,
             },
           },
-          // {
-          //   $match: { "Teacher.address": address },
-          // },
+          {
+            $match: { "Teacher.address": address },
+          },
         ])
         .toArray();
 
