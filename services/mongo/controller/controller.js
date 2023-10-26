@@ -17,13 +17,13 @@ const Wallet = require("../models/wallet");
 const cloudinary = require("cloudinary").v2;
 
 const openai = require("openai");
-const apiKey = "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";
+const apiKey = process.env.OPEN_AI;
 const client = new openai({ apiKey });
 
 cloudinary.config({
-  cloud_name: "ddp528yjf",
-  api_key: "979463692446595",
-  api_secret: "fEKu7qz8PieEtuonw-3Bo3fyLkM",
+  cloud_name: process.env.CLOUDINARY_NAME ,
+  api_key: process.env.CLOUDINARY_KEY,
+  api_secret: process.env.CLOUDINARY_SECRET,
 });
 
 class Controller {
@@ -932,7 +932,7 @@ class Controller {
       const project = await Project.findByPk(projectId);
 
       if (
-        project.status !== "Submitted"
+        project.status !== "Accepted"
       ) {
         throw { name: "cannot_access_payment" };
       }

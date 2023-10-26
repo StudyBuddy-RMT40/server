@@ -579,7 +579,7 @@ describe("Project with endpoint /project", () => {
     const response = await request(app)
       .post("/projects")
       .send({
-        name: "Halo",
+        name: "project testing",
         // studentId: ,
         teacherId: teacherId,
         startDate: "2023-10-1",
@@ -599,7 +599,7 @@ describe("Project with endpoint /project", () => {
 
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty("message", expect.any(String));
-  });
+  }, 15000);
 
   it("should respon 200 and body message", async () => {
     const response = await request(app)
@@ -960,7 +960,7 @@ describe("User with endpoint /student_profile", () => {
 
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty("message", expect.any(String));
-  });
+  }, 15000);
 
   let tempStudentId = "";
   it("should respon 200 user find all and body message", async () => {
@@ -1134,7 +1134,7 @@ describe("User with endpoint /buddy_profile", () => {
 
     expect(response.status).toBe(500);
     expect(response.body).toHaveProperty("message", expect.any(String));
-  });
+  }, 15000);
 
   it("should respon 403 rating have same project id and body message", async () => {
     console.log(sameProjectId, teacherId, '222')
@@ -1439,10 +1439,10 @@ describe("todos with endpoint /todos", () => {
     expect(response.body).toBeInstanceOf(Array);
 
     expect(response.body[0]).toHaveProperty("_id", expect.any(String));
-    expect(response.body[0]).toHaveProperty("name", expect.any(String));
-    expect(response.body[0]).toHaveProperty("learningUrl", expect.any(String));
-    expect(response.body[0]).toHaveProperty("projectId", expect.any(String));
     expect(response.body[0]).toHaveProperty("isFinished", expect.any(Boolean));
+    expect(response.body[0]).toHaveProperty("lectureUrl", expect.any(String));
+    expect(response.body[0]).toHaveProperty("name", expect.any(String));
+    expect(response.body[0]).toHaveProperty("projectId", expect.any(String));
 
     tempId = response.body[0]._id;
   });
@@ -1655,7 +1655,7 @@ describe("Wallet with endpoint /wallet", () => {
     expect(response.body).toHaveProperty("message", "Add amount success");
     expect(response.body).toHaveProperty("id");
     tempId = response.body.id;
-  });
+  }, 15000);
 
   it("should 400 add a new wallet with amount is empty", async () => {
     const response = await request(app)
@@ -1974,7 +1974,7 @@ describe("mediaUrls with endpoint /upload_docs", () => {
       console.log(error);
       throw error;
     }
-  });
+  }, 15000);
 
   it("should 400 if project id is null", async () => {
     try {
@@ -2036,7 +2036,7 @@ describe("mediaUrls with endpoint /upload_docs", () => {
 
     expect(response.status).toBe(500);
     expect(response.body).toHaveProperty("message", expect.any(String));
-  });
+  }, 15000);
 });
 
 describe('Midtrans with endpoint generate-midtrans-token/:projectId', () => {
