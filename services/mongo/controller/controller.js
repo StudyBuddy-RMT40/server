@@ -448,7 +448,7 @@ class Controller {
                 content: `Buat 5 daftar tugas untuk ${name} pastikan dalam format JSON seperti contoh ini:[{'tugas':''},{'tugas':''}].`,
               },
             ],
-            model: "gpt-3.5-turbo-instruct-0914",
+            model: "gpt-3.5-turbo",
           });
           console.log("jobs done");
 
