@@ -900,7 +900,7 @@ class Controller {
       const project = await Project.findByPk(projectId);
 
       if (
-        project.status !== "Submitted"
+        project.status !== "Accepted"
       ) {
         throw { name: "cannot_access_payment" };
       }
@@ -913,7 +913,7 @@ class Controller {
 
       let parameter = {
         transaction_details: {
-          order_id: "TRANSACTION_" + Math.floor(1000 + Math.random() * 2000),
+          order_id: "TRANSACTION_" + Math.floor(Math.random() * 1000000),
           gross_amount: Number(price),
         },
         credit_card: {
